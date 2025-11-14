@@ -1,0 +1,51 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+.row1{
+    margin-top: 1%;
+    margin-left: 30%;
+}
+.row2{
+    margin-left: 30%;
+}
+.row3{
+    margin-left: 30%;
+}
+.row4{
+    margin-left: 30%;
+}
+.row5{
+    margin-left: 30%;
+}
+.row6{
+    margin-left: 30%;
+}
+.row7{
+    margin-left: 30%;
+}
+.row8{
+    margin-left: 30%;
+}
+.tile{
+    width: 5.5rem;
+    height: 5.5rem;
+}
+.user1{
+    margin-top: 1%;
+    margin-left: 10%;
+}
+.user2{
+    margin-left: 80%;
+    margin-bottom: 1%;
+}
+.u2WinsLosses{
+    margin-left: 84%;
+}
+.u1WinsLosses{
+    margin-left: 14%;
+}
+.actingPlayer{
+    margin-top: 2%;
+    text-align: center;
+}
