@@ -1,8 +1,19 @@
 <script lang="ts">
-	const row: number[] = [1,2,3,4,5,6,7,8];
-   
+    import { onMount } from 'svelte';
+    import { tiles, row, columns} from '../../services/Board.ts';
+    onMount(() => {
+    row.forEach(row => {
+        columns.forEach(col => {
+        const id = `${col}${row}`;
+        const button = document.getElementById(id) as HTMLButtonElement | null;
+        if(button){
+            button.addEventListener('click', () => console.log('Clicked ' + id));
+            button.disabled = true;
+        }
+        });
+    });
+    });
 </script>
-
 <main>
 	<h2>
 		<div class="username">
@@ -25,6 +36,9 @@
 			</div>
 		{/each}
 	</h1>
+    <h1 class="pieces">
+        pawn
+    </h1>
 	<h2>
 		<div class="username">
 			<div class="u2WinsLosses">W/L</div>
@@ -68,6 +82,4 @@
     margin-top: 2%;
     text-align: center;
 }
-
-
 </style>
