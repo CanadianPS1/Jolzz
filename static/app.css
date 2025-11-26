@@ -6,33 +6,9 @@
     margin-top: 1%;
     margin-left: 30%;
 }
-.row2{
+.row1, .row2, .row3, .row4, .row5, .row6, .row7, .row8 {
+    display: flex;        
     margin-left: 30%;
-
-}
-.row3{
-    margin-left: 30%;
-
-}
-.row4{
-    margin-left: 30%;
-
-}
-.row5{
-    margin-left: 30%;
-
-}
-.row6{
-    margin-left: 30%;
-
-}
-.row7{
-    margin-left: 30%;
-
-}
-.row8{
-    margin-left: 30%;
-
 }
 .tile{
     width: 5.5rem;
