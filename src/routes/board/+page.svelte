@@ -1,6 +1,8 @@
 <script lang="ts">
 	const row: number[] = [1,2,3,4,5,6,7,8];
+   
 </script>
+
 <main>
 	<h2>
 		<div class="username">
@@ -30,4 +32,42 @@
 		</div>
 	</h2>
 </main>
+<style>
+    *{
+    margin: 0;
+    padding: 0;
+}
+.row1{
+    margin-top: 1%;
+    margin-left: 30%;
+}
+.row1, .row2, .row3, .row4, .row5, .row6, .row7, .row8 {
+    display: flex;        
+    margin-left: 30%;
+}
+.tile{
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 0;
+}
+.user1{
+    margin-top: 1%;
+    margin-left: 10%;
+}
+.user2{
+    margin-left: 80%;
+    margin-bottom: 1%;
+}
+.u2WinsLosses{
+    margin-left: 84%;
+}
+.u1WinsLosses{
+    margin-left: 14%;
+}
+.actingPlayer{
+    margin-top: 2%;
+    text-align: center;
+}
 
+
+</style>
