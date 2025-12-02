@@ -1,23 +1,47 @@
 import { createUser, loginUser } from "$lib/services/DBService";
 import type { Actions } from "@sveltejs/kit";
 
-export const actions = {
-  register: async ({ request }) => {
-    const data = await request.formData();
-    const username = data.get("username")?.toString();
-    const password = data.get("password")?.toString();
+console.log(" +page.server.ts loaded");
 
-    if (username != undefined && password != undefined) {
-      const UUID = createUser(username, password);
+
+export const actions: Actions = {
+  register: async ({ request }) => {
+    console.log(" register() called");
+    try {
+      const data = await request.formData();
+      const username = data.get("username")?.toString();
+      const password = data.get("password")?.toString();
+
+      console.log("username:", username);
+      console.log("password:", password);
+
+      const uuid = await createUser(username!, password!);
+      console.log(" REGISTER SUCCESS:", uuid);
+      return { success: true, uuid };
+
+    } catch (err: any) {
+      console.error(" REGISTER ERROR:", err);
+      return { error: err?.message || "Registration failed" };
     }
   },
+
   login: async ({ request }) => {
-    const data = await request.formData();
-    const username = data.get("username")?.toString();
-    const password = data.get("password")?.toString();
-    
-    if (username != undefined && password != undefined) {
-      const UUID = loginUser(username, password);
+    console.log(" login() called");
+    try {
+      const data = await request.formData();
+      const username = data.get("username")?.toString();
+      const password = data.get("password")?.toString();
+
+      console.log("username:", username);
+      console.log("password:", password);
+
+      const uuid = await loginUser(username!, password!);
+      console.log("LOGIN SUCCESS:", uuid);
+      return { success: true, uuid };
+
+    } catch (err: any) {
+      console.error("LOGIN ERROR:", err);
+      return { error: err?.message || "Login failed" };
     }
-  },
-} satisfies Actions;
+  }
+};

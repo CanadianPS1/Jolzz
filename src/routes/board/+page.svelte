@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { pieces, row, columns} from '$lib/services/Board.ts';
+    import { pieces, row, columns, piecesEqualChance} from '$lib/services/Board.ts';
     //import {kingMovment} from '$lib/services/PieceMovment.ts';
     var whitePiecesToSpawn : number = 16;
     var blackPiecesToSpawn : number = 16;
@@ -21,7 +21,7 @@
             button.disabled = true;
             const amountOfPieces : number = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
             const chanceOfPiece : number = ((64 - tileCount) - amountOfPieces);
-            if(Math.floor(Math.random() * (100 - 1 + 1)) + 1 > chanceOfPiece && amountOfPieces <= 32){
+            if(Math.floor(Math.random() * 100) + 1 > chanceOfPiece && amountOfPieces <= 32){
                 //button.disabled = false;
                 if((16 - whitePiecesToSpawn) < (16 - blackPiecesToSpawn) && whitePiecesToSpawn > 0){
                     button.disabled = false;
@@ -50,7 +50,7 @@
                     
                     console.log('spawned a black piece at : ' + col + row);
                 }else{
-                    if(Math.floor(Math.floor(Math.random() * (100 - 1 + 1)) + 1) > 50 && whitePiecesToSpawn > 0){
+                    if(Math.floor(Math.floor(Math.random() * 100) + 1) > 50 && whitePiecesToSpawn > 0){
                         button.disabled = false;
                         const pieceNumber = 16 - whitePiecesToSpawn;
                         whitePiecesToSpawn -= 1;
@@ -86,6 +86,7 @@
         });
     });
     });
+
     function press(piece : boolean, button : HTMLButtonElement ){
         if(piece){
             switch(button.textContent){
@@ -96,55 +97,71 @@
                     break;
                 case "Knight":
                     break;
-                case "Bishup":
+                case "Bishop":
                     break;
                 case "Queen":
                     break;
                 case "King":
-                    kingMovment("Black");
                     break;
                 default:
                     console.log("Unknown Piece was Pressed");
             }
         }
     }
-    //this code was gunna be in its own file but it needs the DOM so it cant be
-    function getPieceLocation(piece : string) : string | null{
-        var pieceId : string = "not found";
-        row.forEach(row => {
+
+    function generateRandomRows() {
+        const whiteRow = row.splice(0, 2);
+        const blackRow = row.splice(row.length - 2);
+
+        const createdPieces = new Array<string>(16);
+
+        const kingPlacement = Math.floor(Math.random() * 8);
+        const button = document.getElementById(`${columns[kingPlacement]}${1}`) as HTMLButtonElement | null;
+        if (button) {
+            button.disabled = false;
+            button.style.backgroundImage = "url(/assets/WhiteSidePieces/WhiteSideKing.png)";
+            button.style.backgroundSize = "cover";
+            button.style.backgroundPosition = "center";
+            button.textContent = "King";
+            createdPieces[kingPlacement] = "King";
+        }
+
+        whiteRow.forEach((row, rowIndex) => {
             tileCount++;
-            columns.forEach(col => {
+            columns.forEach((col, colIndex) => {
+                if (kingPlacement == colIndex + rowIndex * 8) return;
+
                 const id = `${col}${row}`;
                 const button = document.getElementById(id) as HTMLButtonElement | null;
-                if(button && button.textContent == piece) pieceId = id;
+                if (button) {
+                    button.disabled = false;
+                    const randomPiece = Math.floor(Math.random() * (piecesEqualChance.length - 1));
+                    const piece: string = piecesEqualChance[randomPiece];
+                    const imageURL = "/assets/WhiteSidePieces/WhiteSide" + piece + ".png";
+                    button.style.backgroundImage = "url(" + imageURL + ")";
+                    button.style.backgroundSize = "cover";
+                    button.style.backgroundPosition = "center";
+                    button.textContent = piece;
+                    createdPieces[colIndex + rowIndex * 8] = piece;
+                }
             });
         });
-        return pieceId;
-    }
-    function pawnMovment(pawnSide : string){
-        const pawnLocation = getPieceLocation("1Pawn");
-        const kingLocation = getPieceLocation("King");
-        console.log("the Pawn is at " + pawnLocation);
-    }
-    function rookMovment(rookSide : string){
-        const rookLocation = getPieceLocation("1Rook");
-        console.log("the Rook is at " + rookLocation);
-    }
-    function bishupMovment(bishupSide : string){
-        const bishupLocation = getPieceLocation("1Bishup");
-        console.log("the Bishup is at " + bishupLocation);
-    }
-    function knightMovment(knightSide : string){
-        const knightLocation = getPieceLocation("1Knight");
-        console.log("the Knight is at " + knightLocation);
-    }
-    function queenMovment(queenSide : string){
-        const queenLocation = getPieceLocation("Queen");
-        console.log("the Queen is at " + queenLocation);
-    }
-    function kingMovment(kingSide : string){
-        const kingLocation = getPieceLocation("King");
-        console.log("the King is at " + kingLocation);
+
+        blackRow.forEach((row, rowIndex) => {
+            columns.forEach((col, colIndex) => {
+                const id = `${col}${row}`;
+                const button = document.getElementById(id) as HTMLButtonElement | null;
+                if (button) {
+                    button.disabled = false;
+                    const piece = createdPieces[colIndex + ((blackRow.length - rowIndex - 1) * 8)];
+                    const imageURL = "/assets/BlackSidePieces/BlackSide" + piece + ".png";
+                    button.style.backgroundImage = "url(" + imageURL + ")";
+                    button.style.backgroundSize = "cover";
+                    button.style.backgroundPosition = "center";
+                    button.textContent = piece;
+                }
+            });
+        });
     }
 </script>
 <main>
@@ -158,14 +175,14 @@
 	<h1 class="board">
 		{#each row as num}
 			<div class="row{num}">
-				<button class="tile" id="a{num}">a{num}</button>
-				<button class="tile" id="b{num}">b{num}</button>
-				<button class="tile" id="c{num}">c{num}</button>
-				<button class="tile" id="d{num}">d{num}</button>
-				<button class="tile" id="e{num}">e{num}</button>
-				<button class="tile" id="f{num}">f{num}</button>
-				<button class="tile" id="g{num}">g{num}</button>
-				<button class="tile" id="h{num}">h{num}</button>
+				<button disabled class="tile" id="a{num}">a{num}</button>
+				<button disabled class="tile" id="b{num}">b{num}</button>
+				<button disabled class="tile" id="c{num}">c{num}</button>
+				<button disabled class="tile" id="d{num}">d{num}</button>
+				<button disabled class="tile" id="e{num}">e{num}</button>
+				<button disabled class="tile" id="f{num}">f{num}</button>
+				<button disabled class="tile" id="g{num}">g{num}</button>
+				<button disabled class="tile" id="h{num}">h{num}</button>
 			</div>
 		{/each}
 	</h1>
