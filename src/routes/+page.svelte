@@ -5,7 +5,7 @@
     const inputElement = e.target as HTMLInputElement;
     const username = inputElement.value;
     if (!username) {
-      inputElement.setAttribute("valid", "false");
+      inputElement.style.borderColor = "red";
       return;
     }
 
@@ -13,18 +13,18 @@
       validateUsername(username);
     } catch (e) {
       console.log(e);
-      inputElement.setAttribute("valid", "false");
+      inputElement.style.borderColor = "red";
       return;
     }
 
-    inputElement.setAttribute("valid", "true");
+    inputElement.style.borderColor = "green";
   }
   
   function validatePasswordView(e: Event) {
     const inputElement = e.target as HTMLInputElement;
     const password = inputElement.value;
     if (!password) {
-      inputElement.setAttribute("valid", "false");
+      inputElement.style.borderColor = "red";
       return;
     }
     
@@ -32,11 +32,11 @@
       validatePassword(password);
     } catch (e) {
       console.log(e);
-      inputElement.setAttribute("valid", "false");
+      inputElement.style.borderColor = "red";
       return;
     }
 
-    inputElement.setAttribute("valid", "true");
+    inputElement.style.borderColor = "green";
   }
 </script>
 
@@ -109,14 +109,6 @@
     padding: 10px 15px;
     appearance: none;
     caret-color: coral;
-  }
-
-  input[valid=true] {
-    border-color: lime;
-  }
-  
-  input[valid=false] {
-    border-color: red;
   }
 
   input:focus {

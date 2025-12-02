@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { pieces, row, columns} from '../../lib/services/Board.ts';
+    import { pieces, row, columns} from '$lib/services/Board.ts';
     var whitePiecesToSpawn : number = 16;
     var blackPiecesToSpawn : number = 16;
     var tileCount : number = 0;
