@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { validatePassword, validateUsername } from "$lib/services/DBService";
+  import { validatePassword, validateUsername } from "$lib/services/ClientValidation";
+
 
   function validateUsernameView(e: Event) {
     const inputElement = e.target as HTMLInputElement;
