@@ -23,7 +23,17 @@
             if(Math.floor(Math.random() * (100 - 1 + 1)) + 1 > chanceOfPiece && amountOfPieces <= 32){
                 //button.disabled = false;
                 if((16 - whitePiecesToSpawn) < (16 - blackPiecesToSpawn) && whitePiecesToSpawn > 0){
+                    button.disabled = false;
+                    const pieceNumber = 16 - whitePiecesToSpawn;
                     whitePiecesToSpawn -= 1;
+                    console.log('number of white pieces : ' + pieceNumber);
+                    const piece : string = pieces[pieceNumber];
+                    const imageURL = '/assets/WhiteSidePieces/WhiteSide'+piece+'.png';
+                    button.style.backgroundImage = "url(" + imageURL + ")";
+                    button.style.backgroundSize = "cover";
+                    button.style.backgroundPosition = "center";
+                    button.textContent = piece;
+                    
                     console.log('spawned a white piece at : ' + col + row);
                 }else if((16 - whitePiecesToSpawn) > (16 - blackPiecesToSpawn) && blackPiecesToSpawn > 0){
                     button.disabled = false;
@@ -40,7 +50,17 @@
                     console.log('spawned a black piece at : ' + col + row);
                 }else{
                     if(Math.floor(Math.floor(Math.random() * (100 - 1 + 1)) + 1) > 50 && whitePiecesToSpawn > 0){
+                        button.disabled = false;
+                        const pieceNumber = 16 - whitePiecesToSpawn;
                         whitePiecesToSpawn -= 1;
+                        console.log('number of white pieces : ' + pieceNumber);
+                        const piece : string = pieces[pieceNumber];
+                        const imageURL = '/assets/WhiteSidePieces/WhiteSide'+piece+'.png';
+                        button.style.backgroundImage = "url(" + imageURL + ")";
+                        button.style.backgroundSize = "cover";
+                        button.style.backgroundPosition = "center";
+                        button.textContent = piece;
+                        
                         console.log('spawned a white piece at : ' + col + row);
                     }else if(blackPiecesToSpawn > 0){
                         button.disabled = false;
@@ -66,24 +86,24 @@
     });
     });
     function press(piece : boolean, button : HTMLButtonElement ){
-        // if(piece){
-        //     switch(button.textContent){
-        //         case "Pawn":
-        //             break;
-        //         case "Rook":
-        //             break;
-        //         case "Knight":
-        //             break;
-        //         case "Bishup":
-        //             break;
-        //         case "Queen":
-        //             break;
-        //         case "king":
-        //             break;
-        //         default:
-        //             console.log("Unknown Piece was Pressed");
-        //     }
-        // }
+        if(piece){
+            switch(button.textContent){
+                case "Pawn":
+                    break;
+                case "Rook":
+                    break;
+                case "Knight":
+                    break;
+                case "Bishup":
+                    break;
+                case "Queen":
+                    break;
+                case "king":
+                    break;
+                default:
+                    console.log("Unknown Piece was Pressed");
+            }
+        }
     }
 </script>
 <main>
