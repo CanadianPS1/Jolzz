@@ -1,21 +1,61 @@
-<script lang="ts"></script>
+<script lang="ts">
+  import { validatePassword, validateUsername } from "$lib/services/DBService";
+
+  function validateUsernameView(e: Event) {
+    const inputElement = e.target as HTMLInputElement;
+    const username = inputElement.value;
+    if (!username) {
+      inputElement.setAttribute("valid", "false");
+      return;
+    }
+
+    try {
+      validateUsername(username);
+    } catch (e) {
+      console.log(e);
+      inputElement.setAttribute("valid", "false");
+      return;
+    }
+
+    inputElement.setAttribute("valid", "true");
+  }
+  
+  function validatePasswordView(e: Event) {
+    const inputElement = e.target as HTMLInputElement;
+    const password = inputElement.value;
+    if (!password) {
+      inputElement.setAttribute("valid", "false");
+      return;
+    }
+    
+    try {
+      validatePassword(password);
+    } catch (e) {
+      console.log(e);
+      inputElement.setAttribute("valid", "false");
+      return;
+    }
+
+    inputElement.setAttribute("valid", "true");
+  }
+</script>
 
 <main>
   <h1>Jolzz</h1>
 
   <div class="form-container">
-    <form>
+    <form method="POST" action="?/register">
       <h2>First Time</h2>
-      <input type="text" autocomplete="off" placeholder="Username">
-      <input type="password" placeholder="Password">
-      <button class="submit-button">CREATE PLAYER</button>
+      <input name="username" type="text" autocomplete="off" placeholder="Username" on:input={validateUsernameView}>
+      <input name="password" type="password" placeholder="Password" on:input={validatePasswordView}>
+      <button type="submit" class="submit-button">CREATE PLAYER</button>
     </form>
     
-    <form>
+    <form method="POST" action="?/login">
       <h2>Returning Player</h2>
-      <input type="text" autocomplete="off" placeholder="Username">
-      <input type="text" placeholder="Password">
-      <button class="submit-button">CONTINUE PLAYING</button>
+      <input name="username" type="text" autocomplete="off" placeholder="Username">
+      <input name="password" type="text" placeholder="Password">
+      <button type="submit" class="submit-button">CONTINUE PLAYING</button>
     </form>
   </div>
 </main>
@@ -69,6 +109,14 @@
     padding: 10px 15px;
     appearance: none;
     caret-color: coral;
+  }
+
+  input[valid=true] {
+    border-color: lime;
+  }
+  
+  input[valid=false] {
+    border-color: red;
   }
 
   input:focus {
