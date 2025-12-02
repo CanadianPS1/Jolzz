@@ -4,6 +4,7 @@
     var whitePiecesToSpawn : number = 16;
     var blackPiecesToSpawn : number = 16;
     var tileCount : number = 0;
+    var isPiece : boolean = true;
     for(var i = pieces.length - 1; i > 0; i--){
         const j = Math.floor(Math.random() * (i + 1));
         [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
@@ -15,7 +16,7 @@
         const id = `${col}${row}`;
         const button = document.getElementById(id) as HTMLButtonElement | null;
         if(button){
-            button.addEventListener('click', () => console.log('Clicked ' + id));
+            button.addEventListener('click', () => press(isPiece, button));
             button.disabled = true;
             const amountOfPieces : number = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
             const chanceOfPiece : number = ((64 - tileCount) - amountOfPieces);
@@ -64,6 +65,26 @@
         });
     });
     });
+    function press(piece : boolean, button : HTMLButtonElement ){
+        // if(piece){
+        //     switch(button.textContent){
+        //         case "Pawn":
+        //             break;
+        //         case "Rook":
+        //             break;
+        //         case "Knight":
+        //             break;
+        //         case "Bishup":
+        //             break;
+        //         case "Queen":
+        //             break;
+        //         case "king":
+        //             break;
+        //         default:
+        //             console.log("Unknown Piece was Pressed");
+        //     }
+        // }
+    }
 </script>
 <main>
 	<h2>
