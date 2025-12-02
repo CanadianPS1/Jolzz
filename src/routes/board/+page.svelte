@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { pieces, row, columns} from '$lib/services/Board.ts';
+    //import {kingMovment} from '$lib/services/PieceMovment.ts';
     var whitePiecesToSpawn : number = 16;
     var blackPiecesToSpawn : number = 16;
     var tileCount : number = 0;
@@ -89,6 +90,7 @@
         if(piece){
             switch(button.textContent){
                 case "Pawn":
+                    console.log("pawn pressed");
                     break;
                 case "Rook":
                     break;
@@ -98,12 +100,51 @@
                     break;
                 case "Queen":
                     break;
-                case "king":
+                case "King":
+                    kingMovment("Black");
                     break;
                 default:
                     console.log("Unknown Piece was Pressed");
             }
         }
+    }
+    //this code was gunna be in its own file but it needs the DOM so it cant be
+    function getPieceLocation(piece : string) : string | null{
+        var pieceId : string = "not found";
+        row.forEach(row => {
+            tileCount++;
+            columns.forEach(col => {
+                const id = `${col}${row}`;
+                const button = document.getElementById(id) as HTMLButtonElement | null;
+                if(button && button.textContent == piece) pieceId = id;
+            });
+        });
+        return pieceId;
+    }
+    function pawnMovment(pawnSide : string){
+        const pawnLocation = getPieceLocation("1Pawn");
+        const kingLocation = getPieceLocation("King");
+        console.log("the Pawn is at " + pawnLocation);
+    }
+    function rookMovment(rookSide : string){
+        const rookLocation = getPieceLocation("1Rook");
+        console.log("the Rook is at " + rookLocation);
+    }
+    function bishupMovment(bishupSide : string){
+        const bishupLocation = getPieceLocation("1Bishup");
+        console.log("the Bishup is at " + bishupLocation);
+    }
+    function knightMovment(knightSide : string){
+        const knightLocation = getPieceLocation("1Knight");
+        console.log("the Knight is at " + knightLocation);
+    }
+    function queenMovment(queenSide : string){
+        const queenLocation = getPieceLocation("Queen");
+        console.log("the Queen is at " + queenLocation);
+    }
+    function kingMovment(kingSide : string){
+        const kingLocation = getPieceLocation("King");
+        console.log("the King is at " + kingLocation);
     }
 </script>
 <main>
