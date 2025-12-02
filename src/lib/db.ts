@@ -1,20 +1,20 @@
-import { MongoClient, Db } from 'mongodb';
+import { MongoClient, Db } from "mongodb";
 
-let db: Db;
+let client: MongoClient | null = null;
+let database: Db | null = null;
 
-export async function connectDb() {
-  if (db) return db; // return existing connection
+export async function connectDb(): Promise<Db> {
+  if (database) return database; 
 
-  const client = new MongoClient('mongodb://127.0.0.1:27017');
-  try {
-    await client.connect();
-    db = client.db('jolzz'); // database name
-    console.log('MongoDB connected');
-    return db;
-  } catch (err) {
-    console.error('MongoDB connection error', err);
-    throw err;
-  }
+  client = new MongoClient("mongodb://127.0.0.1:27017");
+
+  await client.connect();
+  database = client.db("jolzz");
+
+  console.log("MongoDB connected");
+  return database;
 }
 
-export { db };
+export async function getDb(): Promise<Db> {
+  return await connectDb();
+}

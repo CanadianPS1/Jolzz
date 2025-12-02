@@ -7,17 +7,29 @@ export const actions = {
     const username = data.get("username")?.toString();
     const password = data.get("password")?.toString();
 
-    if (username != undefined && password != undefined) {
-      const UUID = createUser(username, password);
+    if (username && password) {
+      try {
+        const UUID = await createUser(username, password);
+        return { success: true, uuid: UUID };
+      } catch (err) {
+        return { error: err };
+      }
     }
   },
+
   login: async ({ request }) => {
     const data = await request.formData();
     const username = data.get("username")?.toString();
     const password = data.get("password")?.toString();
-    
-    if (username != undefined && password != undefined) {
-      const UUID = loginUser(username, password);
+
+    if (username && password) {
+      try {
+        const UUID = await loginUser(username, password);
+        return { success: true, uuid: UUID };
+      } catch (err) {
+        return { error: err };
+      }
     }
-  },
+  }
 } satisfies Actions;
+

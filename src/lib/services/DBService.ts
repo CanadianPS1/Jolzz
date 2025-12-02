@@ -1,14 +1,47 @@
-export function createUser(username: string, password: string): string {
+import { getDb } from "$lib/db";
+import { randomUUID } from "crypto";
+
+export async function createUser(username: string, password: string): Promise<string> {
   validateUsername(username);
   validatePassword(password);
-  return "";
+
+  const db = await getDb();
+  const users = db.collection("users");
+
+  // prevent duplicate usernames
+  const existing = await users.findOne({ username });
+  if (existing) throw new Error("Username already exists");
+
+  const hash = await Bun.password.hash(password);
+  const uuid = randomUUID();
+
+  await users.insertOne({
+    uuid,
+    username,
+    passwordHash: hash
+  });
+
+  return uuid;
 }
 
-export function loginUser(username: string, password: string): string {
+export async function loginUser(username: string, password: string): Promise<string> {
   validateUsername(username);
   validatePassword(password);
-  return "";
+
+  const db = await getDb();
+  const users = db.collection("users");
+
+  const user = await users.findOne({ username });
+
+  if (!user) throw new Error("Invalid username or password");
+
+  const match = await Bun.password.verify(password, user.passwordHash);
+  if (!match) throw new Error("Invalid username or password");
+
+  return user.uuid;
 }
+
+// validation
 
 export function validateUsername(username: string) {
   if (username.length < 4 || username.length > 16)
