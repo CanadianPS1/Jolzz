@@ -1,11 +1,14 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { pieces, row, columns, piecesEqualChance} from '$lib/services/Board.ts';
+    import {Piece} from '$lib/services/Piece.ts';
     //import {kingMovment} from '$lib/services/PieceMovment.ts';
     var whitePiecesToSpawn : number = 16;
     var blackPiecesToSpawn : number = 16;
     var tileCount : number = 0;
     var isPiece : boolean = true;
+    var blackPieceSet : Piece[];
+    var whitePieceSet : Piece[];
     for(var i = pieces.length - 1; i > 0; i--){
         const j = Math.floor(Math.random() * (i + 1));
         [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
@@ -34,7 +37,67 @@
                     button.style.backgroundSize = "cover";
                     button.style.backgroundPosition = "center";
                     button.textContent = piece;
-                    
+                    // var canMoveUp : boolean = false;
+                    // var canMoveDown : boolean = false;
+                    // var canMoveLeft : boolean = false;
+                    // var canMoveRight : boolean = false;
+                    // var canMoveDinagnle : boolean = false;
+                    // var canMoveInL : boolean = false;
+                    // var amountOfSpacesCanMove : number = 0;
+                    // if(piece == "King"){
+                    //     canMoveDinagnle = true;
+                    //     canMoveUp = true;
+                    //     canMoveDown = true;
+                    //     canMoveLeft = true;
+                    //     canMoveRight = true;
+                    //     canMoveInL = false;
+                    //     amountOfSpacesCanMove = 1;
+                    // }else if(piece == "Queen"){
+                    //     canMoveDinagnle = true;
+                    //     canMoveUp = true;
+                    //     canMoveDown = true;
+                    //     canMoveLeft = true;
+                    //     canMoveRight = true;
+                    //     canMoveInL = false;
+                    //     amountOfSpacesCanMove = 7;
+                    // }else if(piece == "Bishup"){
+                    //     canMoveDinagnle = true;
+                    //     canMoveUp = false;
+                    //     canMoveDown = false;
+                    //     canMoveLeft = false;
+                    //     canMoveRight = false;
+                    //     canMoveInL = false;
+                    //     amountOfSpacesCanMove = 7;
+                    // }
+                    // else if(piece == "Knight"){
+                    //     canMoveDinagnle = false;
+                    //     canMoveUp = false;
+                    //     canMoveDown = false;
+                    //     canMoveLeft = false;
+                    //     canMoveRight = false;
+                    //     canMoveInL = true;
+                    //     amountOfSpacesCanMove = 4;
+                    // }
+                    // else if(piece == "Rook"){
+                    //     canMoveDinagnle = false;
+                    //     canMoveUp = true;
+                    //     canMoveDown = true;
+                    //     canMoveLeft = true;
+                    //     canMoveRight = true;
+                    //     canMoveInL = false;
+                    //     amountOfSpacesCanMove = 7;
+                    // }
+                    // else if(piece == "Pawn"){
+                    //     canMoveDinagnle = false;
+                    //     canMoveUp = true;
+                    //     canMoveDown = false;
+                    //     canMoveLeft = false;
+                    //     canMoveRight = false;
+                    //     canMoveInL = false;
+                    //     amountOfSpacesCanMove = 2;
+                    // }
+                    // whitePieceSet.push(new Piece(pieceNumber,"white",piece,canMoveUp,canMoveDown,canMoveRight,canMoveLeft,canMoveDinagnle,
+                    //                                     canMoveInL, amountOfSpacesCanMove));
                     console.log('spawned a white piece at : ' + col + row);
                 }else if((16 - whitePiecesToSpawn) > (16 - blackPiecesToSpawn) && blackPiecesToSpawn > 0){
                     button.disabled = false;
