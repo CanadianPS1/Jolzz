@@ -380,10 +380,10 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
             <div class={"row" + num}>
                 {#each columns as col}
                     <button 
-                        class="tile" 
-                        id={`${col}${num}`}
-                        on:click={() => press(`${col}${num}`)}
-                    ></button>
+                     class="tile {((col.charCodeAt(0) + num) % 2 === 0) ? 'light' : 'dark'}"
+                     id={`${col}${num}`}
+                    on:click={() => press(`${col}${num}`)}
+                     ></button>
                 {/each}
             </div>
         {/each}
@@ -410,6 +410,14 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
         border-radius: 0;
         background-repeat: no-repeat;
     }
+
+    .tile.light {
+    background-color: #f0d9b5; 
+     }
+
+    .tile.dark {
+    background-color: #b58863; 
+     }
 
     .tile.disabled {
         pointer-events: none;
