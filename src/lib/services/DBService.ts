@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 console.log(" DBService.ts loaded");
 
 
-// CREATE USER
+// create user
 export async function createUser(username: string, password: string): Promise<string> {
   console.log(" createUser called", username);
 
@@ -30,7 +30,7 @@ export async function createUser(username: string, password: string): Promise<st
   return uuid;
 }
 
-// LOGIN USER
+// login user
 export async function loginUser(username: string, password: string): Promise<string> {
   console.log(" loginUser called", username);
 
@@ -50,7 +50,7 @@ export async function loginUser(username: string, password: string): Promise<str
   return user.uuid;
 }
 
-// VALIDATION
+// Validation
 export function validateUsername(username: string) {
   if (username.length < 4 || username.length > 16)
     throw new Error("Username must be between 4 to 16 characters");

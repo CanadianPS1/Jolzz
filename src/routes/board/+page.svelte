@@ -1,4 +1,6 @@
 <script lang="ts">
+    let gameOver = false;
+
     import { onMount } from "svelte";
     import { pieces, row, columns, tiles } from "$lib/services/Board";
     import { Piece } from "$lib/services/Piece";
@@ -27,6 +29,8 @@
     let blackPieceSet: Piece[] = [];
     var blackOrWhite : boolean = true;
     // Shuffle your piece list ONCE
+
+    // Shuffle piece list ONCE
     for (let i = pieces.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
@@ -100,7 +104,7 @@
         console.log("=== BOARD INIT COMPLETE ===");
     });
 
-    /** Spawn a single random piece on a tile */
+    // Spawn a single random piece on a tile 
     function placeRandomPiece(button: HTMLButtonElement, side: "white" | "black", pieceIndex: number) {
         const piece = pieces[pieceIndex];
 
@@ -125,8 +129,9 @@
         }
     }
 
-    /** Handle tile clicks */
+    //Handle tile clicks 
     function press(tileId: string) {
+           if (gameOver) return;
         const btn = tiles[tileId];
         if (!btn) return;
 
@@ -194,7 +199,7 @@
 
             console.log("Legal moves:", currentMoves);
 
-            // ⭐ highlight moves for ALL pieces
+            // highlight moves for all pieces
             clearHighlights();
             highlightTiles(currentMoves);
 
@@ -227,28 +232,33 @@
         console.log("Clicked non-legal empty tile");
     }
 
-    /** Move the piece from → to */
-  function movePiece(fromId: string, toId: string) {
+    //Move the piece from -> to 
+function movePiece(fromId: string, toId: string) {
     const from = tiles[fromId];
     const to = tiles[toId];
 
     if (!from || !to) return;
 
     const piece = from.textContent;
-    const side = from.dataset.side ?? "";
+    const side = from.dataset.side;
 
-    // Copy appearance
-    const img = from.style.backgroundImage;
-    to.style.backgroundImage = img;
+    // King capture check
+    if (to.textContent === "King") {
+        endGame(side === "white" ? "white" : "black");
+        return;
+    }
+
+    // copy appearence
+    to.style.backgroundImage = from.style.backgroundImage;
     to.style.backgroundSize = "cover";
     to.style.backgroundPosition = "center";
     to.style.backgroundRepeat = "no-repeat";
 
-    // Copy piece data
-    to.textContent = piece;
+    // Copy peice data
+    to.textContent = from.textContent;
     to.dataset.side = side;
 
-    // Clear old tile
+    // Clear old title
     from.style.backgroundImage = "";
     from.style.backgroundSize = "";
     from.style.backgroundPosition = "";
@@ -256,7 +266,7 @@
     from.textContent = "";
     delete from.dataset.side;
 
-    // ⭐ PROMOTION CHECK ⭐
+    //  Promotion check
     if (piece === "Pawn") {
         const row = toId[1];
 
@@ -286,9 +296,7 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
     console.log(`Pawn promoted to Queen (${side})`);
 }
 
-
-
-    /** Clear highlights + selection */
+    // Clear highlights + selection 
     function clearSelection() {
         selectedTile = null;
         selectedPiece = null;
@@ -298,7 +306,19 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
         clearHighlights();
     }
 
-    /** Build a piece object */
+
+    function endGame(winner: "white" | "black") {
+    gameOver = true; 
+    alert(`${winner.toUpperCase()} WINS! The king has been captured.`);
+    console.log(`GAME OVER — ${winner.toUpperCase()} wins.`);
+    for (const id in tiles) {
+        tiles[id].style.opacity = "0.8";
+    }
+}
+
+    
+
+    // Build a piece object 
     function generatePieceObject(pieceNumber: number, piece: string, array: Piece[], side: string) {
         let canMoveUp = false;
         let canMoveDown = false;
@@ -343,6 +363,7 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
 
         return array;
     }
+
 </script>
 
 <main>
