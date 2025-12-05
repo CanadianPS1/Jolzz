@@ -21,7 +21,7 @@
     // Random spawning vars
     let whitePiecesToSpawn = 16;
     let blackPiecesToSpawn = 16;
-    let tileCount = 0;
+    let tileCount : number = 0;
 
     let whitePieceSet: Piece[] = [];
     let blackPieceSet: Piece[] = [];
@@ -37,6 +37,7 @@
         console.log("=== BOARD INIT ===");
 
         row.forEach((r) => {
+            tileCount++;
             columns.forEach((c) => {
                 const id = `${c}${r}`;
                 const button = document.getElementById(id) as HTMLButtonElement | null;
@@ -53,25 +54,27 @@
                 button.textContent = "";
                 button.style.backgroundImage = "";
 
-                tileCount++;
-
+                //tileCount++;
+                
                 // Random spawn logic (same as before)
-                const spawnedCount = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
-                const neededChance = (64 - tileCount) - spawnedCount;
-                const roll = Math.floor(Math.random() * 100) + 1;
-
-                if (roll > neededChance && spawnedCount <= 32) {
+                //const spawnedCount = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
+                //const neededChance = (64 - tileCount) - spawnedCount;
+                //const roll = Math.floor(Math.random() * 100) + 1;
+                const amountOfPieces : number = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
+                const chanceOfPiece : number = ((64 - tileCount) - (amountOfPieces + 2));
+                if(Math.floor(Math.random() * 100) + 1 > chanceOfPiece && amountOfPieces <= 32){
+                //if (roll > neededChance && spawnedCount <= 32) {
                     const whiteCount = 16 - whitePiecesToSpawn;
                     const blackCount = 16 - blackPiecesToSpawn;
 
-                    if (whiteCount < blackCount && whitePiecesToSpawn > 0) {
+                    if((16 - whitePiecesToSpawn) < (16 - blackPiecesToSpawn) && whitePiecesToSpawn > 0){
                         placeRandomPiece(button, "white", whiteCount);
                         whitePiecesToSpawn--;
-                    } else if (blackCount < whiteCount && blackPiecesToSpawn > 0) {
+                    }else if((16 - whitePiecesToSpawn) > (16 - blackPiecesToSpawn) && blackPiecesToSpawn > 0){
                         placeRandomPiece(button, "black", blackCount);
                         blackPiecesToSpawn--;
                     } else {
-                        if (Math.random() > 0.5 && whitePiecesToSpawn > 0) {
+                            if(Math.floor(Math.floor(Math.random() * 100) + 1) > 50 && whitePiecesToSpawn > 0){
                             placeRandomPiece(button, "white", whiteCount);
                             whitePiecesToSpawn--;
                         } else if (blackPiecesToSpawn > 0) {
@@ -92,7 +95,7 @@
 
         const img = side === "white"
             ? `/assets/WhiteSidePieces/WhiteSide${piece}.png`
-            : `/assets/BlackSidePieces/BlackSide${piece}.png`;
+            : `/assets/BlackSidePieces/blackSide${piece}.png`;
 
         button.style.backgroundImage = `url(${img})`;
         button.style.backgroundSize = "cover";
@@ -262,7 +265,7 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
 
     const img = side === "white"
         ? `/assets/WhiteSidePieces/WhiteSideQueen.png`
-        : `/assets/BlackSidePieces/BlackSideQueen.png`;
+        : `/assets/BlackSidePieces/blackSideQueen.png`;
 
     tile.style.backgroundImage = `url(${img})`;
     tile.style.backgroundSize = "cover";
