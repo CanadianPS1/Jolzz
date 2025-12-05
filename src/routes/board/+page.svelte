@@ -1,300 +1,389 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import { pieces, row, columns, piecesEqualChance} from '$lib/services/Board.ts';
-    import {Piece} from '$lib/services/Piece.ts';
-    //import {kingMovment} from '$lib/services/PieceMovment.ts';
-    var whitePiecesToSpawn : number = 16;
-    var blackPiecesToSpawn : number = 16;
-    var tileCount : number = 0;
-    var isPiece : boolean = true;
-    var blackPieceSet : Piece[] = [];
-    var whitePieceSet : Piece[] = [];
-    for(var i = pieces.length - 1; i > 0; i--){
+    import { onMount } from "svelte";
+    import { pieces, row, columns, tiles } from "$lib/services/Board";
+    import { Piece } from "$lib/services/Piece";
+    import {
+        pawnMovement,
+        rookMovement,
+        bishopMovement,
+        kingMovement,
+        knightMovement,
+        queenMovement
+    } from "$lib/services/PieceMovment";
+    import { highlightTiles, clearHighlights } from "$lib/services/HighlightService";
+
+    // Selection system
+    let selectedTile: string | null = null;
+    let selectedPiece: string | null = null;
+    let selectedSide: "white" | "black" | null = null;
+    let currentMoves: string[] = [];
+
+    // Random spawning vars
+    let whitePiecesToSpawn = 16;
+    let blackPiecesToSpawn = 16;
+    let tileCount = 0;
+
+    let whitePieceSet: Piece[] = [];
+    let blackPieceSet: Piece[] = [];
+
+    // Shuffle your piece list ONCE
+    for (let i = pieces.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
     }
-    onMount(() => {
-    row.forEach(row => {
-        tileCount++;
-        columns.forEach(col => {
-        const id = `${col}${row}`;
-        const button = document.getElementById(id) as HTMLButtonElement | null;
-        if(button){
-            button.addEventListener('click', () => press(isPiece, button));
-            button.disabled = true;
-            const amountOfPieces : number = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
-            const chanceOfPiece : number = ((64 - tileCount) - amountOfPieces);
-            if(Math.floor(Math.random() * 100) + 1 > chanceOfPiece && amountOfPieces <= 32){
-                if((16 - whitePiecesToSpawn) < (16 - blackPiecesToSpawn) && whitePiecesToSpawn > 0){
-                    button.disabled = false;
-                    const pieceNumber = 16 - whitePiecesToSpawn;
-                    whitePiecesToSpawn -= 1;
-                    console.log('number of white pieces : ' + pieceNumber);
-                    const piece : string = pieces[pieceNumber];
-                    const imageURL = '/assets/WhiteSidePieces/WhiteSide'+piece+'.png';
-                    button.style.backgroundImage = "url(" + imageURL + ")";
-                    button.style.backgroundSize = "cover";
-                    button.style.backgroundPosition = "center";
-                    button.textContent = piece;
-                    whitePieceSet = generatePieceObject(pieceNumber,piece,whitePieceSet,"white");
-                    console.log('spawned a white piece at : ' + col + row);
-                }else if((16 - whitePiecesToSpawn) > (16 - blackPiecesToSpawn) && blackPiecesToSpawn > 0){
-                    button.disabled = false;
-                    const pieceNumber = 16 - blackPiecesToSpawn;
-                    blackPiecesToSpawn -= 1;
-                    console.log('number of black pieces : ' + pieceNumber);
-                    const piece : string = pieces[pieceNumber];
-                    const imageURL = '/assets/BlackSidePieces/blackSide'+piece+'.png';
-                    button.style.backgroundImage = "url(" + imageURL + ")";
-                    button.style.backgroundSize = "cover";
-                    button.style.backgroundPosition = "center";
-                    button.textContent = piece;
 
-                    blackPieceSet = generatePieceObject(pieceNumber,piece,blackPieceSet,"black");
-                    console.log('spawned a black piece at : ' + col + row);
-                }else{
-                    if(Math.floor(Math.floor(Math.random() * 100) + 1) > 50 && whitePiecesToSpawn > 0){
-                        button.disabled = false;
-                        const pieceNumber = 16 - whitePiecesToSpawn;
-                        whitePiecesToSpawn -= 1;
-                        console.log('number of white pieces : ' + pieceNumber);
-                        const piece : string = pieces[pieceNumber];
-                        const imageURL = '/assets/WhiteSidePieces/WhiteSide'+piece+'.png';
-                        button.style.backgroundImage = "url(" + imageURL + ")";
-                        button.style.backgroundSize = "cover";
-                        button.style.backgroundPosition = "center";
-                        button.textContent = piece;
-                        whitePieceSet = generatePieceObject(pieceNumber,piece,whitePieceSet,"white");
-                        console.log('spawned a white piece at : ' + col + row);
-                    }else if(blackPiecesToSpawn > 0){
-                        button.disabled = false;
-                        const pieceNumber = 16 - blackPiecesToSpawn;
-                        blackPiecesToSpawn -= 1;
-                        console.log('number of black pieces : ' + pieceNumber);
-                        const piece : string = pieces[pieceNumber];
-                        const imageURL = '/assets/BlackSidePieces/blackSide'+piece+'.png';
-                        button.style.backgroundImage = "url(" + imageURL + ")";
-                        button.style.backgroundSize = "cover";
-                        button.style.backgroundPosition = "center";
-                        button.textContent = piece;
-                        blackPieceSet = generatePieceObject(pieceNumber,piece,blackPieceSet,"black");
-                        console.log('spawned a black piece at : ' + col + row);
+    // Game initialization AFTER DOM loads
+    onMount(() => {
+        console.log("=== BOARD INIT ===");
+
+        row.forEach((r) => {
+            columns.forEach((c) => {
+                const id = `${c}${r}`;
+                const button = document.getElementById(id) as HTMLButtonElement | null;
+
+                if (!button) {
+                    console.warn("Tile not found:", id);
+                    return;
+                }
+
+                // Register tile globally
+                tiles[id] = button;
+
+                // Start empty
+                button.textContent = "";
+                button.style.backgroundImage = "";
+
+                tileCount++;
+
+                // Random spawn logic (same as before)
+                const spawnedCount = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
+                const neededChance = (64 - tileCount) - spawnedCount;
+                const roll = Math.floor(Math.random() * 100) + 1;
+
+                if (roll > neededChance && spawnedCount <= 32) {
+                    const whiteCount = 16 - whitePiecesToSpawn;
+                    const blackCount = 16 - blackPiecesToSpawn;
+
+                    if (whiteCount < blackCount && whitePiecesToSpawn > 0) {
+                        placeRandomPiece(button, "white", whiteCount);
+                        whitePiecesToSpawn--;
+                    } else if (blackCount < whiteCount && blackPiecesToSpawn > 0) {
+                        placeRandomPiece(button, "black", blackCount);
+                        blackPiecesToSpawn--;
+                    } else {
+                        if (Math.random() > 0.5 && whitePiecesToSpawn > 0) {
+                            placeRandomPiece(button, "white", whiteCount);
+                            whitePiecesToSpawn--;
+                        } else if (blackPiecesToSpawn > 0) {
+                            placeRandomPiece(button, "black", blackCount);
+                            blackPiecesToSpawn--;
+                        }
                     }
                 }
-            }
-            console.log('Amount of Pieces: ' + amountOfPieces + 
-                        '\nAmount of Black Pieces :' + (16 - blackPiecesToSpawn) + 
-                        '\nAmount of White Pieces : ' + (16 - whitePiecesToSpawn));
-        }
+            });
         });
+
+        console.log("=== BOARD INIT COMPLETE ===");
     });
-    });
-    function generatePieceObject(pieceNumber : number, piece : string, array : Piece[], side : string){
-        //alert(array);
-        var canMoveUp : boolean = false;
-        var canMoveDown : boolean = false;
-        var canMoveLeft : boolean = false;
-        var canMoveRight : boolean = false;
-        var canMoveDinagnle : boolean = false;
-        var canMoveInL : boolean = false;
-        var amountOfSpacesCanMove : number = 0;
-        if(piece == "King"){
-            canMoveDinagnle = true;
-            canMoveUp = true;
-            canMoveDown = true;
-            canMoveLeft = true;
-            canMoveRight = true;
-            canMoveInL = false;
+
+    /** Spawn a single random piece on a tile */
+    function placeRandomPiece(button: HTMLButtonElement, side: "white" | "black", pieceIndex: number) {
+        const piece = pieces[pieceIndex];
+
+        const img = side === "white"
+            ? `/assets/WhiteSidePieces/WhiteSide${piece}.png`
+            : `/assets/BlackSidePieces/BlackSide${piece}.png`;
+
+        button.style.backgroundImage = `url(${img})`;
+        button.style.backgroundSize = "cover";
+        button.style.backgroundPosition = "center";
+        button.style.backgroundRepeat = "no-repeat";
+
+        button.textContent = piece;
+        button.dataset.side = side;
+
+        console.log("Placed", side, piece, "at", button.id);
+
+        if (side === "white") {
+            whitePieceSet = generatePieceObject(pieceIndex, piece, whitePieceSet, side);
+        } else {
+            blackPieceSet = generatePieceObject(pieceIndex, piece, blackPieceSet, side);
+        }
+    }
+
+    /** Handle tile clicks */
+    function press(tileId: string) {
+        const btn = tiles[tileId];
+        if (!btn) return;
+
+        console.log("--- press() called on", tileId, "---");
+
+        const pieceName = btn.textContent?.trim() || "";
+
+        // determine side safely
+        let side: "white" | "black" | null = null;
+        const rawSide = btn.dataset.side;
+
+        if (rawSide === "white" || rawSide === "black") {
+            side = rawSide;
+        } else {
+            const img = btn.style.backgroundImage;
+            if (img.includes("WhiteSide")) side = "white";
+            if (img.includes("BlackSide")) side = "black";
+        }
+
+        console.log("Piece:", pieceName, "Side:", side);
+
+        // Selecting a piece
+        if (!selectedTile) {
+            if (!pieceName || !side) {
+                console.log("Not a valid selectable piece.");
+                return;
+            }
+
+            console.log("SELECTED:", side, pieceName, "at", tileId);
+
+            selectedTile = tileId;
+            selectedPiece = pieceName;
+            selectedSide = side;
+
+            // compute moves for this piece
+            switch (pieceName) {
+                case "Pawn":
+                    currentMoves = pawnMovement(tileId, side).moves;
+                    break;
+
+                case "Rook":
+                    currentMoves = rookMovement(tileId, side);
+                    break;
+
+                case "Bishop":
+                    currentMoves = bishopMovement(tileId, side);
+                    break;
+
+                case "Knight":
+                    currentMoves = knightMovement(tileId, side);
+                    break;
+
+                case "Queen":
+                    currentMoves = queenMovement(tileId, side);
+                    break;
+
+                case "King":
+                    currentMoves = kingMovement(tileId, side);
+                    break;
+
+                default:
+                    currentMoves = [];
+                    break;
+            }
+
+            console.log("Legal moves:", currentMoves);
+
+            // ⭐ highlight moves for ALL pieces
+            clearHighlights();
+            highlightTiles(currentMoves);
+
+            return;
+        }
+
+        // Deselect same tile
+        if (tileId === selectedTile) {
+            console.log("Deselected", tileId);
+            clearSelection();
+            return;
+        }
+
+        // Move if tile is in legal moves
+        if (currentMoves.includes(tileId)) {
+            console.log("Moving from", selectedTile, "to", tileId);
+            movePiece(selectedTile, tileId);
+            clearSelection();
+            return;
+        }
+
+        // Switch selection to a different piece
+        if (pieceName) {
+            console.log("Switching selection to", tileId);
+            clearSelection();
+            press(tileId);
+            return;
+        }
+
+        console.log("Clicked non-legal empty tile");
+    }
+
+    /** Move the piece from → to */
+  function movePiece(fromId: string, toId: string) {
+    const from = tiles[fromId];
+    const to = tiles[toId];
+
+    if (!from || !to) return;
+
+    const piece = from.textContent;
+    const side = from.dataset.side ?? "";
+
+    // Copy appearance
+    const img = from.style.backgroundImage;
+    to.style.backgroundImage = img;
+    to.style.backgroundSize = "cover";
+    to.style.backgroundPosition = "center";
+    to.style.backgroundRepeat = "no-repeat";
+
+    // Copy piece data
+    to.textContent = piece;
+    to.dataset.side = side;
+
+    // Clear old tile
+    from.style.backgroundImage = "";
+    from.style.backgroundSize = "";
+    from.style.backgroundPosition = "";
+    from.style.backgroundRepeat = "";
+    from.textContent = "";
+    delete from.dataset.side;
+
+    // ⭐ PROMOTION CHECK ⭐
+    if (piece === "Pawn") {
+        const row = toId[1];
+
+        if (side === "white" && row === "8") {
+            promotePawn(to, "white");
+        }
+
+        if (side === "black" && row === "1") {
+            promotePawn(to, "black");
+        }
+    }
+}
+
+function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
+    // For now: always promote to Queen
+    tile.textContent = "Queen";
+
+    const img = side === "white"
+        ? `/assets/WhiteSidePieces/WhiteSideQueen.png`
+        : `/assets/BlackSidePieces/BlackSideQueen.png`;
+
+    tile.style.backgroundImage = `url(${img})`;
+    tile.style.backgroundSize = "cover";
+    tile.style.backgroundPosition = "center";
+    tile.style.backgroundRepeat = "no-repeat";
+
+    console.log(`Pawn promoted to Queen (${side})`);
+}
+
+
+
+    /** Clear highlights + selection */
+    function clearSelection() {
+        selectedTile = null;
+        selectedPiece = null;
+        selectedSide = null;
+        currentMoves = [];
+
+        clearHighlights();
+    }
+
+    /** Build a piece object */
+    function generatePieceObject(pieceNumber: number, piece: string, array: Piece[], side: string) {
+        let canMoveUp = false;
+        let canMoveDown = false;
+        let canMoveLeft = false;
+        let canMoveRight = false;
+        let canMoveDinagnle = false;
+        let canMoveInL = false;
+        let amountOfSpacesCanMove = 0;
+
+        if (piece === "King") {
+            canMoveUp = canMoveDown = canMoveLeft = canMoveRight = canMoveDinagnle = true;
             amountOfSpacesCanMove = 1;
-        }else if(piece == "Queen"){
-            canMoveDinagnle = true;
-            canMoveUp = true;
-            canMoveDown = true;
-            canMoveLeft = true;
-            canMoveRight = true;
-            canMoveInL = false;
+        } else if (piece === "Queen") {
+            canMoveUp = canMoveDown = canMoveLeft = canMoveRight = canMoveDinagnle = true;
             amountOfSpacesCanMove = 7;
-        }else if(piece == "Bishup"){
+        } else if (piece === "Bishop" || piece === "Bishup") {
             canMoveDinagnle = true;
-            canMoveUp = false;
-            canMoveDown = false;
-            canMoveLeft = false;
-            canMoveRight = false;
-            canMoveInL = false;
             amountOfSpacesCanMove = 7;
-        }else if(piece == "Knight"){
-            canMoveDinagnle = false;
-            canMoveUp = false;
-            canMoveDown = false;
-            canMoveLeft = false;
-            canMoveRight = false;
+        } else if (piece === "Knight") {
             canMoveInL = true;
             amountOfSpacesCanMove = 4;
-        }else if(piece == "Rook"){
-            canMoveDinagnle = false;
-            canMoveUp = true;
-            canMoveDown = true;
-            canMoveLeft = true;
-            canMoveRight = true;
-            canMoveInL = false;
+        } else if (piece === "Rook") {
+            canMoveUp = canMoveDown = canMoveLeft = canMoveRight = true;
             amountOfSpacesCanMove = 7;
-        }else if(piece == "Pawn"){
-            canMoveDinagnle = false;
+        } else if (piece === "Pawn") {
             canMoveUp = true;
-            canMoveDown = false;
-            canMoveLeft = false;
-            canMoveRight = false;
-            canMoveInL = false;
             amountOfSpacesCanMove = 2;
         }
-        try{
-            array.push(new Piece(pieceNumber,side,piece,canMoveUp,canMoveDown,canMoveRight,canMoveLeft,canMoveDinagnle,canMoveInL, amountOfSpacesCanMove));
-        }catch(e){
-            alert(e);
-        }
+
+        array.push(new Piece(
+            pieceNumber,
+            side,
+            piece,
+            canMoveUp,
+            canMoveDown,
+            canMoveRight,
+            canMoveLeft,
+            canMoveDinagnle,
+            canMoveInL,
+            amountOfSpacesCanMove
+        ));
+
         return array;
     }
-    function press(piece : boolean, button : HTMLButtonElement ){
-        if(piece){
-            switch(button.textContent){
-                case "Pawn":
-                    console.log("pawn pressed");
-                    break;
-                case "Rook":
-                    break;
-                case "Knight":
-                    break;
-                case "Bishop":
-                    break;
-                case "Queen":
-                    break;
-                case "King":
-                    break;
-                default:
-                    console.log("Unknown Piece was Pressed");
-            }
-        }
-    }
-
-    function generateRandomRows() {
-        const whiteRow = row.splice(0, 2);
-        const blackRow = row.splice(row.length - 2);
-
-        const createdPieces = new Array<string>(16);
-
-        const kingPlacement = Math.floor(Math.random() * 8);
-        const button = document.getElementById(`${columns[kingPlacement]}${1}`) as HTMLButtonElement | null;
-        if (button) {
-            button.disabled = false;
-            button.style.backgroundImage = "url(/assets/WhiteSidePieces/WhiteSideKing.png)";
-            button.style.backgroundSize = "cover";
-            button.style.backgroundPosition = "center";
-            button.textContent = "King";
-            createdPieces[kingPlacement] = "King";
-        }
-
-        whiteRow.forEach((row, rowIndex) => {
-            tileCount++;
-            columns.forEach((col, colIndex) => {
-                if (kingPlacement == colIndex + rowIndex * 8) return;
-
-                const id = `${col}${row}`;
-                const button = document.getElementById(id) as HTMLButtonElement | null;
-                if (button) {
-                    button.disabled = false;
-                    const randomPiece = Math.floor(Math.random() * (piecesEqualChance.length - 1));
-                    const piece: string = piecesEqualChance[randomPiece];
-                    const imageURL = "/assets/WhiteSidePieces/WhiteSide" + piece + ".png";
-                    button.style.backgroundImage = "url(" + imageURL + ")";
-                    button.style.backgroundSize = "cover";
-                    button.style.backgroundPosition = "center";
-                    button.textContent = piece;
-                    createdPieces[colIndex + rowIndex * 8] = piece;
-                }
-            });
-        });
-
-        blackRow.forEach((row, rowIndex) => {
-            columns.forEach((col, colIndex) => {
-                const id = `${col}${row}`;
-                const button = document.getElementById(id) as HTMLButtonElement | null;
-                if (button) {
-                    button.disabled = false;
-                    const piece = createdPieces[colIndex + ((blackRow.length - rowIndex - 1) * 8)];
-                    const imageURL = "/assets/BlackSidePieces/BlackSide" + piece + ".png";
-                    button.style.backgroundImage = "url(" + imageURL + ")";
-                    button.style.backgroundSize = "cover";
-                    button.style.backgroundPosition = "center";
-                    button.textContent = piece;
-                }
-            });
-        });
-    }
 </script>
+
 <main>
-	<h2>
-		<div class="username">
-			<div class="user1">DEFULT USER 1</div>
-			<div class="u1WinsLosses">W/L</div>
-		</div>
-		<div class="actingPlayer">USER #'s TURN</div>
-	</h2>
-	<h1 class="board">
-		{#each row as num}
-			<div class="row{num}">
-				<button disabled class="tile" id="a{num}">a{num}</button>
-				<button disabled class="tile" id="b{num}">b{num}</button>
-				<button disabled class="tile" id="c{num}">c{num}</button>
-				<button disabled class="tile" id="d{num}">d{num}</button>
-				<button disabled class="tile" id="e{num}">e{num}</button>
-				<button disabled class="tile" id="f{num}">f{num}</button>
-				<button disabled class="tile" id="g{num}">g{num}</button>
-				<button disabled class="tile" id="h{num}">h{num}</button>
-			</div>
-		{/each}
-	</h1>
-    
-	<h2>
-		<div class="username">
-			<div class="u2WinsLosses">W/L</div>
-			<div class="user2">DEFULT USER 2</div>
-		</div>
-	</h2>
+    <h2>
+        <div class="username">
+            <div class="user1">DEFAULT USER 1</div>
+            <div class="u1WinsLosses">W/L</div>
+        </div>
+        <div class="actingPlayer">USER #'s TURN</div>
+    </h2>
+
+    <h1 class="board">
+        {#each row as num}
+            <div class={"row" + num}>
+                {#each columns as col}
+                    <button 
+                        class="tile" 
+                        id={`${col}${num}`}
+                        on:click={() => press(`${col}${num}`)}
+                    ></button>
+                {/each}
+            </div>
+        {/each}
+    </h1>
+
+    <h2>
+        <div class="username">
+            <div class="u2WinsLosses">W/L</div>
+            <div class="user2">DEFAULT USER 2</div>
+        </div>
+    </h2>
 </main>
+
 <style>
-    *{
-    margin: 0;
-    padding: 0;
-}
-.row1{
-    margin-top: 1%;
-    margin-left: 30%;
-}
-.row1, .row2, .row3, .row4, .row5, .row6, .row7, .row8 {
-    display: flex;        
-    margin-left: 30%;
-}
-.tile{
-    width: 5.5rem;
-    height: 5.5rem;
-    border-radius: 0;
-}
-.user1{
-    margin-top: 1%;
-    margin-left: 10%;
-}
-.user2{
-    margin-left: 80%;
-    margin-bottom: 1%;
-}
-.u2WinsLosses{
-    margin-left: 84%;
-}
-.u1WinsLosses{
-    margin-left: 14%;
-}
-.actingPlayer{
-    margin-top: 2%;
-    text-align: center;
-}
+    * { margin: 0; padding: 0; }
+    .row1 { margin-top: 1%; margin-left: 30%; }
+    .row1, .row2, .row3, .row4, .row5, .row6, .row7, .row8 {
+        display: flex;
+        margin-left: 30%;
+    }
+    .tile {
+        width: 5.5rem;
+        height: 5.5rem;
+        border-radius: 0;
+        background-repeat: no-repeat;
+    }
+
+    .tile.disabled {
+        pointer-events: none;
+        opacity: 0.6;
+    }
+
+    .user1 { margin-top: 1%; margin-left: 10%; }
+    .user2 { margin-left: 80%; margin-bottom: 1%; }
+    .u2WinsLosses { margin-left: 84%; }
+    .u1WinsLosses { margin-left: 14%; }
+    .actingPlayer { margin-top: 2%; text-align: center; }
 </style>
