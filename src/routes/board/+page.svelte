@@ -103,7 +103,60 @@
 
         console.log("=== BOARD INIT COMPLETE ===");
     });
+    function generateRandomRows() {
+        const whiteRow = row.splice(0, 2);
+        const blackRow = row.splice(row.length - 2);
 
+        const createdPieces = new Array<string>(16);
+
+        const kingPlacement = Math.floor(Math.random() * 8);
+        const button = document.getElementById(`${columns[kingPlacement]}${1}`) as HTMLButtonElement | null;
+        if (button) {
+            button.disabled = false;
+            button.style.backgroundImage = "url(/assets/WhiteSidePieces/WhiteSideKing.png)";
+            button.style.backgroundSize = "cover";
+            button.style.backgroundPosition = "center";
+            button.textContent = "King";
+            createdPieces[kingPlacement] = "King";
+        }
+
+        whiteRow.forEach((row, rowIndex) => {
+            tileCount++;
+            columns.forEach((col, colIndex) => {
+                if (kingPlacement == colIndex + rowIndex * 8) return;
+
+                const id = `${col}${row}`;
+                const button = document.getElementById(id) as HTMLButtonElement | null;
+                if (button) {
+                    button.disabled = false;
+                    const randomPiece = Math.floor(Math.random() * (piecesEqualChance.length - 1));
+                    const piece: string = piecesEqualChance[randomPiece];
+                    const imageURL = "/assets/WhiteSidePieces/WhiteSide" + piece + ".png";
+                    button.style.backgroundImage = "url(" + imageURL + ")";
+                    button.style.backgroundSize = "cover";
+                    button.style.backgroundPosition = "center";
+                    button.textContent = piece;
+                    createdPieces[colIndex + rowIndex * 8] = piece;
+                }
+            });
+        });
+
+        blackRow.forEach((row, rowIndex) => {
+            columns.forEach((col, colIndex) => {
+                const id = `${col}${row}`;
+                const button = document.getElementById(id) as HTMLButtonElement | null;
+                if (button) {
+                    button.disabled = false;
+                    const piece = createdPieces[colIndex + ((blackRow.length - rowIndex - 1) * 8)];
+                    const imageURL = "/assets/BlackSidePieces/BlackSide" + piece + ".png";
+                    button.style.backgroundImage = "url(" + imageURL + ")";
+                    button.style.backgroundSize = "cover";
+                    button.style.backgroundPosition = "center";
+                    button.textContent = piece;
+                }
+            });
+        });
+    }
     // Spawn a single random piece on a tile 
     function placeRandomPiece(button: HTMLButtonElement, side: "white" | "black", pieceIndex: number) {
         const piece = pieces[pieceIndex];
