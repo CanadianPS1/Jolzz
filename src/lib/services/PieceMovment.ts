@@ -1,7 +1,7 @@
 import { tiles, columns, row } from "$lib/services/Board";
 import { highlightTiles } from "$lib/services/HighlightService";
 
-// Convert tile string (e.g. "a4") → indexes
+// Convert tile string (ex: "a4") -> indexes
 function parseTile(tileId: string) {
     const col = tileId[0];
     const r = parseInt(tileId[1]);
@@ -11,7 +11,7 @@ function parseTile(tileId: string) {
     };
 }
 
-// Convert indexes → tile string
+// Convert indexes -> tile string
 function makeTile(colIndex: number, rowIndex: number): string | null {
     if (colIndex < 0 || colIndex > 7) return null;
     if (rowIndex < 0 || rowIndex > 7) return null;
@@ -39,9 +39,9 @@ export function pawnMovement(tile: string, side: string) {
     const { colIndex, rowIndex } = parseTile(tile);
 
     //BOARD ORIENTATION:
-    // row 1 is TOP → rowIndex 0
-    // White moves DOWN (+1)
-    // Black moves UP (-1)
+    // row 1 is TOP -> rowIndex 0
+    // White moves down (+1)
+    // Black moves up (-1)
     const direction = side === "white" ? 1 : -1;
        console.log("=== PAWN MOVEMENT DEBUG ===");
     console.log("Tile:", tile);
@@ -62,7 +62,7 @@ export function pawnMovement(tile: string, side: string) {
     const rightDiag = makeTile(colIndex + 1, rowIndex + direction);
     console.log("Right diag:", rightDiag, "occupiedByEnemy:", tileOccupiedByEnemy(rightDiag!, side));
 
-    // Promotion rows for your flipped board
+    // Promotion rows for flipped board
     const promotionRow = side === "white" ? 7 : 0;
 
     // 1 square forward
@@ -71,9 +71,7 @@ export function pawnMovement(tile: string, side: string) {
         moves.push(oneStep);
     }
 
-    // 2 squares forward (only if the pawn hasn't moved)
-    // In random mode: we allow 2-step only if pawn has NEVER moved and is NOT blocked
-    // Meaning: if original tile is still at its random spawn and both squares ahead are empty.
+    // 2 squares forward 
     if (oneStep && !tileOccupied(oneStep)) {
         const twoStep = makeTile(colIndex, rowIndex + direction * 2);
         if (twoStep && !tileOccupied(twoStep)) {
