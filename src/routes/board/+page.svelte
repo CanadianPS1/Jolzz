@@ -25,7 +25,7 @@
 
     let whitePieceSet: Piece[] = [];
     let blackPieceSet: Piece[] = [];
-
+    var blackOrWhite : boolean = true;
     // Shuffle your piece list ONCE
     for (let i = pieces.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -38,10 +38,21 @@
 
         row.forEach((r) => {
             tileCount++;
+            if(blackOrWhite){
+                blackOrWhite = false;
+            }else{
+                blackOrWhite = true;
+            }
             columns.forEach((c) => {
                 const id = `${c}${r}`;
                 const button = document.getElementById(id) as HTMLButtonElement | null;
-
+                if(blackOrWhite){
+                    button.style.backgroundColor = "white";
+                    blackOrWhite = false;
+                }else{
+                    button.style.backgroundColor = "black";
+                    blackOrWhite = true;
+                }
                 if (!button) {
                     console.warn("Tile not found:", id);
                     return;
