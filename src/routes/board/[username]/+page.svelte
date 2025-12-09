@@ -16,7 +16,7 @@
     import { currentTurn_store, opponent_store, playerColor_store, username_store } from "$lib/store/ConncectionStore";
     import { ClientConncection } from "$lib/services/ClientConnection";
     import { page } from "$app/state";
-  import { goto } from "$app/navigation";
+    import { goto } from "$app/navigation";
 
     let connection: ClientConncection;
 
@@ -449,6 +449,7 @@
     </h2>
 
     <h1 class="board">
+        <!--generates each button with its location-->
         {#each row as num}
             <div class={"row" + num}>
                 {#each columns as col}
