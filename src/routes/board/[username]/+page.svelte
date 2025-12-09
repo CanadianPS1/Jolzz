@@ -20,34 +20,34 @@
 
     let connection: ClientConncection;
 
-    // Selection system
+    // selection system
     let selectedTile: string | null = null;
     let selectedPiece: string | null = null;
     let selectedSide: "white" | "black" | null = null;
     let currentMoves: string[] = [];
 
-    // Random spawning vars
+    // random spawning vars
     let whitePiecesToSpawn = 16;
     let blackPiecesToSpawn = 16;
     let tileCount : number = 0;
 
     let whitePieceSet: Piece[] = [];
     let blackPieceSet: Piece[] = [];
-    // Shuffle your piece list ONCE
+    // shuffle piece list once
 
-    // Stored values
+    // stored values
     let username: string | null = null;
     let opponent: string | null = null;
     let playerColor: "white" | "black" | null = null;
     let currentTurn: "white" | "black" = "white";
 
-    // Shuffle piece list ONCE
+    // shuffle piece list once
     for (let i = pieces.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
     }
 
-    // Game initialization AFTER DOM loads
+    // game initialization after dom loads
     onMount(() => {
         if (page.params.username == undefined) {
             goto("/");
@@ -85,14 +85,15 @@
                     return;
                 }
 
-                // Register tile globally
+                // register tile globally
                 tiles[id] = button;
 
-                // Start empty
+                // start empty
                 button.textContent = "";
                 button.style.backgroundImage = "";
                 
-                // Random spawn logic (same as before)
+                // Random spawn logic. Peices to muddled and kings always spawn next to eachother
+                
                 //const spawnedCount = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
                 //const neededChance = (64 - tileCount) - spawnedCount;
                 //const roll = Math.floor(Math.random() * 100) + 1;
@@ -177,7 +178,7 @@
         });
     }
 
-    // Spawn a single random piece on a tile 
+    // spawn a single random piece on a tile 
     function placeRandomPiece(button: HTMLButtonElement, side: "white" | "black", pieceIndex: number) {
         const piece = pieces[pieceIndex];
 
@@ -202,7 +203,7 @@
         }
     }
 
-    //Handle tile clicks 
+    // handle tile clicks 
     function press(tileId: string) {
         if (gameOver) return;
         const btn = tiles[tileId];
@@ -226,7 +227,7 @@
 
         console.log("Piece:", pieceName, "Side:", side);
 
-        // Selecting a piece
+        // selecting a piece
         if (!selectedTile) {
             if (!pieceName || !side) {
                 console.log("Not a valid selectable piece.");
@@ -279,14 +280,14 @@
             return;
         }
 
-        // Deselect same tile
+        // deselect same tile
         if (tileId === selectedTile) {
             console.log("Deselected", tileId);
             clearSelection();
             return;
         }
 
-        // Move if tile is in legal moves
+        // move if tile is in legal moves
         if (currentMoves.includes(tileId)) {
             console.log("Moving from", selectedTile, "to", tileId);
             movePiece(selectedTile, tileId);
@@ -294,7 +295,7 @@
             return;
         }
 
-        // Switch selection to a different piece
+        // switch selection to a different piece
         if (pieceName) {
             console.log("Switching selection to", tileId);
             clearSelection();
@@ -305,7 +306,7 @@
         console.log("Clicked non-legal empty tile");
     }
 
-    //Move the piece from -> to 
+    // move the piece from -> to 
     function movePiece(fromId: string, toId: string) {
         const from = tiles[fromId];
         const to = tiles[toId];
@@ -315,7 +316,7 @@
         const piece = from.textContent;
         const side = from.dataset.side;
 
-        // King capture check
+        // king capture check
         if (to.textContent === "King") {
             endGame(side === "white" ? "white" : "black");
             return;
@@ -327,11 +328,11 @@
         to.style.backgroundPosition = "center";
         to.style.backgroundRepeat = "no-repeat";
 
-        // Copy peice data
+        // copy peice data
         to.textContent = from.textContent;
         to.dataset.side = side;
 
-        // Clear old title
+        // clear old title
         from.style.backgroundImage = "";
         from.style.backgroundSize = "";
         from.style.backgroundPosition = "";
@@ -339,7 +340,7 @@
         from.textContent = "";
         delete from.dataset.side;
 
-        //  Promotion check
+        //  promotion check
         if (piece === "Pawn") {
             const row = toId[1];
 
@@ -354,7 +355,7 @@
     }
 
     function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
-        // For now: always promote to Queen
+        // for now always promote to Queen
         tile.textContent = "Queen";
 
         const img = side === "white"
@@ -369,7 +370,7 @@
         console.log(`Pawn promoted to Queen (${side})`);
     }
 
-    // Clear highlights + selection 
+    // clear highlights and selection 
     function clearSelection() {
         selectedTile = null;
         selectedPiece = null;
@@ -388,7 +389,7 @@
         }
     }    
 
-    // Build a piece object 
+    // build a piece object 
     function generatePieceObject(pieceNumber: number, piece: string, array: Piece[], side: string) {
         let canMoveUp = false;
         let canMoveDown = false;
