@@ -1,8 +1,8 @@
 <script lang="ts">
     let gameOver = false;
 
-    import { onMount } from "svelte";
-    import { pieces, row, columns, tiles } from "$lib/services/Board";
+    import { onDestroy, onMount } from "svelte";
+    import { pieces, row, columns, tiles, piecesEqualChance } from "$lib/services/Board";
     import { Piece } from "$lib/services/Piece";
     import {
         pawnMovement,
@@ -13,6 +13,12 @@
         queenMovement
     } from "$lib/services/PieceMovment";
     import { highlightTiles, clearHighlights } from "$lib/services/HighlightService";
+    import { currentTurn_store, opponent_store, playerColor_store, username_store } from "$lib/store/ConncectionStore";
+    import { ClientConncection } from "$lib/services/ClientConnection";
+    import { page } from "$app/state";
+  import { goto } from "$app/navigation";
+
+    let connection: ClientConncection;
 
     // Selection system
     let selectedTile: string | null = null;
@@ -27,8 +33,13 @@
 
     let whitePieceSet: Piece[] = [];
     let blackPieceSet: Piece[] = [];
-    var blackOrWhite : boolean = true;
     // Shuffle your piece list ONCE
+
+    // Stored values
+    let username: string | null = null;
+    let opponent: string | null = null;
+    let playerColor: "white" | "black" | null = null;
+    let currentTurn: "white" | "black" = "white";
 
     // Shuffle piece list ONCE
     for (let i = pieces.length - 1; i > 0; i--) {
@@ -38,25 +49,37 @@
 
     // Game initialization AFTER DOM loads
     onMount(() => {
-        console.log("=== BOARD INIT ===");
+        if (page.params.username == undefined) {
+            goto("/");
+            return;
+        }
 
+        username_store.subscribe((value) => username = value);
+        opponent_store.subscribe((value) => opponent = value);
+        playerColor_store.subscribe((value) => playerColor = value);
+        currentTurn_store.subscribe((value) => currentTurn = value);
+
+        connection = new ClientConncection("ws", "127.0.0.1", 3333);
+        setTimeout(() => {
+            if (page.params.username == undefined) {
+                goto("/");
+                return;
+            }
+            
+            connection.username = page.params.username;
+        }, 250);
+    });
+
+    onDestroy(() => {
+        if (connection != undefined) connection.close();
+    });
+
+    function generateBoard() {
         row.forEach((r) => {
             tileCount++;
-            if(blackOrWhite){
-                blackOrWhite = false;
-            }else{
-                blackOrWhite = true;
-            }
             columns.forEach((c) => {
                 const id = `${c}${r}`;
                 const button = document.getElementById(id) as HTMLButtonElement | null;
-                if(blackOrWhite){
-                    button.style.backgroundColor = "white";
-                    blackOrWhite = false;
-                }else{
-                    button.style.backgroundColor = "black";
-                    blackOrWhite = true;
-                }
                 if (!button) {
                     console.warn("Tile not found:", id);
                     return;
@@ -68,41 +91,37 @@
                 // Start empty
                 button.textContent = "";
                 button.style.backgroundImage = "";
-
-                //tileCount++;
                 
                 // Random spawn logic (same as before)
                 //const spawnedCount = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
                 //const neededChance = (64 - tileCount) - spawnedCount;
                 //const roll = Math.floor(Math.random() * 100) + 1;
-                const amountOfPieces : number = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
-                const chanceOfPiece : number = ((64 - tileCount) - (amountOfPieces + 2));
-                if(Math.floor(Math.random() * 100) + 1 > chanceOfPiece && amountOfPieces <= 32){
-                //if (roll > neededChance && spawnedCount <= 32) {
-                    const whiteCount = 16 - whitePiecesToSpawn;
-                    const blackCount = 16 - blackPiecesToSpawn;
+                // const amountOfPieces : number = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
+                // const chanceOfPiece : number = ((64 - tileCount) - (amountOfPieces + 2));
+                // if(Math.floor(Math.random() * 100) + 1 > chanceOfPiece && amountOfPieces <= 32){
+                //     const whiteCount = 16 - whitePiecesToSpawn;
+                //     const blackCount = 16 - blackPiecesToSpawn;
 
-                    if((16 - whitePiecesToSpawn) < (16 - blackPiecesToSpawn) && whitePiecesToSpawn > 0){
-                        placeRandomPiece(button, "white", whiteCount);
-                        whitePiecesToSpawn--;
-                    }else if((16 - whitePiecesToSpawn) > (16 - blackPiecesToSpawn) && blackPiecesToSpawn > 0){
-                        placeRandomPiece(button, "black", blackCount);
-                        blackPiecesToSpawn--;
-                    } else {
-                            if(Math.floor(Math.floor(Math.random() * 100) + 1) > 50 && whitePiecesToSpawn > 0){
-                            placeRandomPiece(button, "white", whiteCount);
-                            whitePiecesToSpawn--;
-                        } else if (blackPiecesToSpawn > 0) {
-                            placeRandomPiece(button, "black", blackCount);
-                            blackPiecesToSpawn--;
-                        }
-                    }
-                }
+                //     if((16 - whitePiecesToSpawn) < (16 - blackPiecesToSpawn) && whitePiecesToSpawn > 0){
+                //         placeRandomPiece(button, "white", whiteCount);
+                //         whitePiecesToSpawn--;
+                //     }else if((16 - whitePiecesToSpawn) > (16 - blackPiecesToSpawn) && blackPiecesToSpawn > 0){
+                //         placeRandomPiece(button, "black", blackCount);
+                //         blackPiecesToSpawn--;
+                //     } else {
+                //             if(Math.floor(Math.floor(Math.random() * 100) + 1) > 50 && whitePiecesToSpawn > 0){
+                //             placeRandomPiece(button, "white", whiteCount);
+                //             whitePiecesToSpawn--;
+                //         } else if (blackPiecesToSpawn > 0) {
+                //             placeRandomPiece(button, "black", blackCount);
+                //             blackPiecesToSpawn--;
+                //         }
+                //     }
+                // }
             });
         });
+    }
 
-        console.log("=== BOARD INIT COMPLETE ===");
-    });
     function generateRandomRows() {
         const whiteRow = row.splice(0, 2);
         const blackRow = row.splice(row.length - 2);
@@ -157,13 +176,14 @@
             });
         });
     }
+
     // Spawn a single random piece on a tile 
     function placeRandomPiece(button: HTMLButtonElement, side: "white" | "black", pieceIndex: number) {
         const piece = pieces[pieceIndex];
 
         const img = side === "white"
             ? `/assets/WhiteSidePieces/WhiteSide${piece}.png`
-            : `/assets/BlackSidePieces/blackSide${piece}.png`;
+            : `/assets/BlackSidePieces/BlackSide${piece}.png`;
 
         button.style.backgroundImage = `url(${img})`;
         button.style.backgroundSize = "cover";
@@ -184,7 +204,7 @@
 
     //Handle tile clicks 
     function press(tileId: string) {
-           if (gameOver) return;
+        if (gameOver) return;
         const btn = tiles[tileId];
         if (!btn) return;
 
@@ -286,68 +306,68 @@
     }
 
     //Move the piece from -> to 
-function movePiece(fromId: string, toId: string) {
-    const from = tiles[fromId];
-    const to = tiles[toId];
+    function movePiece(fromId: string, toId: string) {
+        const from = tiles[fromId];
+        const to = tiles[toId];
 
-    if (!from || !to) return;
+        if (!from || !to) return;
 
-    const piece = from.textContent;
-    const side = from.dataset.side;
+        const piece = from.textContent;
+        const side = from.dataset.side;
 
-    // King capture check
-    if (to.textContent === "King") {
-        endGame(side === "white" ? "white" : "black");
-        return;
-    }
-
-    // copy appearence
-    to.style.backgroundImage = from.style.backgroundImage;
-    to.style.backgroundSize = "cover";
-    to.style.backgroundPosition = "center";
-    to.style.backgroundRepeat = "no-repeat";
-
-    // Copy peice data
-    to.textContent = from.textContent;
-    to.dataset.side = side;
-
-    // Clear old title
-    from.style.backgroundImage = "";
-    from.style.backgroundSize = "";
-    from.style.backgroundPosition = "";
-    from.style.backgroundRepeat = "";
-    from.textContent = "";
-    delete from.dataset.side;
-
-    //  Promotion check
-    if (piece === "Pawn") {
-        const row = toId[1];
-
-        if (side === "white" && row === "8") {
-            promotePawn(to, "white");
+        // King capture check
+        if (to.textContent === "King") {
+            endGame(side === "white" ? "white" : "black");
+            return;
         }
 
-        if (side === "black" && row === "1") {
-            promotePawn(to, "black");
+        // copy appearence
+        to.style.backgroundImage = from.style.backgroundImage;
+        to.style.backgroundSize = "cover";
+        to.style.backgroundPosition = "center";
+        to.style.backgroundRepeat = "no-repeat";
+
+        // Copy peice data
+        to.textContent = from.textContent;
+        to.dataset.side = side;
+
+        // Clear old title
+        from.style.backgroundImage = "";
+        from.style.backgroundSize = "";
+        from.style.backgroundPosition = "";
+        from.style.backgroundRepeat = "";
+        from.textContent = "";
+        delete from.dataset.side;
+
+        //  Promotion check
+        if (piece === "Pawn") {
+            const row = toId[1];
+
+            if (side === "white" && row === "8") {
+                promotePawn(to, "white");
+            }
+
+            if (side === "black" && row === "1") {
+                promotePawn(to, "black");
+            }
         }
     }
-}
 
-function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
-    // For now: always promote to Queen
-    tile.textContent = "Queen";
+    function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
+        // For now: always promote to Queen
+        tile.textContent = "Queen";
 
-    const img = side === "white"
-        ? `/assets/WhiteSidePieces/WhiteSideQueen.png`
-        : `/assets/BlackSidePieces/blackSideQueen.png`;
+        const img = side === "white"
+            ? `/assets/WhiteSidePieces/WhiteSideQueen.png`
+            : `/assets/BlackSidePieces/BlackSideQueen.png`;
 
-    tile.style.backgroundImage = `url(${img})`;
-    tile.style.backgroundSize = "cover";
-    tile.style.backgroundPosition = "center";
-    tile.style.backgroundRepeat = "no-repeat";
+        tile.style.backgroundImage = `url(${img})`;
+        tile.style.backgroundSize = "cover";
+        tile.style.backgroundPosition = "center";
+        tile.style.backgroundRepeat = "no-repeat";
 
-    console.log(`Pawn promoted to Queen (${side})`);
-}
+        console.log(`Pawn promoted to Queen (${side})`);
+    }
 
     // Clear highlights + selection 
     function clearSelection() {
@@ -359,17 +379,14 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
         clearHighlights();
     }
 
-
     function endGame(winner: "white" | "black") {
-    gameOver = true; 
-    alert(`${winner.toUpperCase()} WINS! The king has been captured.`);
-    console.log(`GAME OVER — ${winner.toUpperCase()} wins.`);
-    for (const id in tiles) {
-        tiles[id].style.opacity = "0.8";
-    }
-}
-
-    
+        gameOver = true; 
+        alert(`${winner.toUpperCase()} WINS! The king has been captured.`);
+        console.log(`GAME OVER — ${winner.toUpperCase()} wins.`);
+        for (const id in tiles) {
+            tiles[id].style.opacity = "0.8";
+        }
+    }    
 
     // Build a piece object 
     function generatePieceObject(pieceNumber: number, piece: string, array: Piece[], side: string) {
@@ -377,18 +394,18 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
         let canMoveDown = false;
         let canMoveLeft = false;
         let canMoveRight = false;
-        let canMoveDinagnle = false;
+        let canMoveDiagonal = false;
         let canMoveInL = false;
         let amountOfSpacesCanMove = 0;
 
         if (piece === "King") {
-            canMoveUp = canMoveDown = canMoveLeft = canMoveRight = canMoveDinagnle = true;
+            canMoveUp = canMoveDown = canMoveLeft = canMoveRight = canMoveDiagonal = true;
             amountOfSpacesCanMove = 1;
         } else if (piece === "Queen") {
-            canMoveUp = canMoveDown = canMoveLeft = canMoveRight = canMoveDinagnle = true;
+            canMoveUp = canMoveDown = canMoveLeft = canMoveRight = canMoveDiagonal = true;
             amountOfSpacesCanMove = 7;
         } else if (piece === "Bishop" || piece === "Bishup") {
-            canMoveDinagnle = true;
+            canMoveDiagonal = true;
             amountOfSpacesCanMove = 7;
         } else if (piece === "Knight") {
             canMoveInL = true;
@@ -409,7 +426,7 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
             canMoveDown,
             canMoveRight,
             canMoveLeft,
-            canMoveDinagnle,
+            canMoveDiagonal,
             canMoveInL,
             amountOfSpacesCanMove
         ));
@@ -422,8 +439,10 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
 <main>
     <h2>
         <div class="username">
-            <div class="user1">DEFAULT USER 1</div>
-            <div class="u1WinsLosses">W/L</div>
+            {#key username}
+                <div class="user1">{username != null ? username : ""}</div>
+            {/key}
+            <!-- <div class="u1WinsLosses">W/L</div> -->
         </div>
         <div class="actingPlayer">USER #'s TURN</div>
     </h2>
@@ -432,10 +451,11 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
         {#each row as num}
             <div class={"row" + num}>
                 {#each columns as col}
-                    <button 
-                     class="tile {((col.charCodeAt(0) + num) % 2 === 0) ? 'light' : 'dark'}"
-                     id={`${col}${num}`}
-                    on:click={() => press(`${col}${num}`)}
+                    <button
+                        title={`${col}${num}`}
+                        class="tile {((col.charCodeAt(0) + num) % 2 === 0) ? 'light' : 'dark'}"
+                        id={`${col}${num}`}
+                        on:click={() => press(`${col}${num}`)}
                      ></button>
                 {/each}
             </div>
@@ -444,8 +464,10 @@ function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
 
     <h2>
         <div class="username">
-            <div class="u2WinsLosses">W/L</div>
-            <div class="user2">DEFAULT USER 2</div>
+            <!-- <div class="u2WinsLosses">W/L</div> -->
+            {#key opponent}
+                <div class="user2">{opponent != null ? opponent : ""}</div>
+            {/key}
         </div>
     </h2>
 </main>

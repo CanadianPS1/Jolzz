@@ -1,4 +1,3 @@
-console.log(" db.ts loaded");
 import { MongoClient, Db } from "mongodb";
 
 let client: MongoClient | null = null;

@@ -1,13 +1,9 @@
 import { connectDb } from "$lib/db";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
-console.log(" DBService.ts loaded");
-
 
 // create user
 export async function createUser(username: string, password: string): Promise<string> {
-  console.log(" createUser called", username);
-
   validateUsername(username);
   validatePassword(password);
 
@@ -32,8 +28,6 @@ export async function createUser(username: string, password: string): Promise<st
 
 // login user
 export async function loginUser(username: string, password: string): Promise<string> {
-  console.log(" loginUser called", username);
-
   validateUsername(username);
   validatePassword(password);
 

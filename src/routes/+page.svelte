@@ -1,7 +1,6 @@
 <script lang="ts">
   import { validatePassword, validateUsername } from "$lib/services/ClientValidation";
 
-
   function validateUsernameView(e: Event) {
     const inputElement = e.target as HTMLInputElement;
     const username = inputElement.value;
@@ -13,7 +12,6 @@
     try {
       validateUsername(username);
     } catch (e) {
-      console.log(e);
       inputElement.style.borderColor = "red";
       return;
     }
@@ -32,7 +30,6 @@
     try {
       validatePassword(password);
     } catch (e) {
-      console.log(e);
       inputElement.style.borderColor = "red";
       return;
     }
@@ -47,15 +44,15 @@
   <div class="form-container">
     <form method="POST" action="?/register">
       <h2>First Time</h2>
-      <input name="username" type="text" autocomplete="off" placeholder="Username" on:input={validateUsernameView}>
+      <input name="username" type="text" autocomplete="off" autocorrect="off" placeholder="Username" on:input={validateUsernameView}>
       <input name="password" type="password" placeholder="Password" on:input={validatePasswordView}>
       <button type="submit" class="submit-button">CREATE PLAYER</button>
     </form>
     
     <form method="POST" action="?/login">
       <h2>Returning Player</h2>
-      <input name="username" type="text" autocomplete="off" placeholder="Username">
-      <input name="password" type="text" placeholder="Password">
+      <input name="username" type="text" autocomplete="off" autocorrect="off" placeholder="Username" on:input={validateUsernameView}>
+      <input name="password" type="password" placeholder="Password" on:input={validatePasswordView}>
       <button type="submit" class="submit-button">CONTINUE PLAYING</button>
     </form>
   </div>

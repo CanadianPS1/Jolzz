@@ -1,48 +1,38 @@
 import { createUser, loginUser } from "$lib/services/DBService";
-import type { Actions } from "@sveltejs/kit";
-
-
-console.log(" +page.server.ts loaded");
-
+import { redirect, type Actions } from "@sveltejs/kit";
 
 export const actions: Actions = {
   register: async ({ request }) => {
-    console.log(" register() called");
+    const data = await request.formData();
+    const username = data.get("username")!.toString();
+    const password = data.get("password")!.toString();
+
+    let uuid: string;
     try {
-      const data = await request.formData();
-      const username = data.get("username")?.toString();
-      const password = data.get("password")?.toString();
-
-      console.log("username:", username);
-      console.log("password:", password);
-
-      const uuid = await createUser(username!, password!);
-      console.log(" REGISTER SUCCESS:", uuid);
-      return { success: true, uuid };
-
+      uuid = await createUser(username, password);
+      console.info(" REGISTER SUCCESS:", uuid);
     } catch (err: any) {
       console.error(" REGISTER ERROR:", err);
       return { error: err?.message || "Registration failed" };
     }
+    
+    throw redirect(303, `/board/${username}`);
   },
-
+  
   login: async ({ request }) => {
-    console.log(" login() called");
+    const data = await request.formData();
+    const username = data.get("username")!.toString();
+    const password = data.get("password")!.toString();
+    
+    let uuid: string;
     try {
-      const data = await request.formData();
-      const username = data.get("username")?.toString();
-      const password = data.get("password")?.toString();
-
-      console.log("username:", username);
-      console.log("password:", password);
-
-      const uuid = await loginUser(username!, password!);
-      console.log("LOGIN SUCCESS:", uuid);
-      return { success: true, uuid };
-
+      uuid = await loginUser(username, password);
+      console.info("LOGIN SUCCESS:", uuid);  
     } catch (err: any) {
       console.error("LOGIN ERROR:", err);
       return { error: err?.message || "Login failed" };
     }
+    
+    throw redirect(303, `/board/${username}`);
   }
 };
