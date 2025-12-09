@@ -444,7 +444,7 @@
             {/key}
             <!-- <div class="u1WinsLosses">W/L</div> -->
         </div>
-        <div class="actingPlayer">USER #'s TURN</div>
+        <!--<div class="actingPlayer">USER #'s TURN</div>-->
     </h2>
 
     <h1 class="board">

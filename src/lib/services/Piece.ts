@@ -1,4 +1,5 @@
 export class Piece{
+    //all the diffrent things a piece can do, mainly as booleans
     id : number | undefined;
     side : string | undefined;
     pieceName : string | undefined;
