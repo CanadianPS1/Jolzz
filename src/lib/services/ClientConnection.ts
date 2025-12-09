@@ -107,8 +107,8 @@ export class ClientConncection {
   public set board(value: string) {
     this._board = value;
 
-    if (this.playerColor == "white") this.websocket.send(`tw:`);
-    else this.websocket.send(`tb:`);
+    if (this.playerColor == "white") this.websocket.send(`tw:${value}`);
+    else this.websocket.send(`tb:${value}`);
   }
 
   public get board(): string | null {
