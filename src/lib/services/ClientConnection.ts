@@ -38,7 +38,7 @@ export class ClientConncection {
         console.warn(`User (${this.username}) is not authenticated. Resend username`);
         break;
       case MessageAction.GAME_START:
-        // Sends opponent and the opponent's color
+        // sends opponent and the opponent's color
         const splitMessage = message.split(",");
         this.opponent = splitMessage[1];
         if (splitMessage[2] === "white") this.playerColor = "black";

@@ -44,7 +44,7 @@ export async function loginUser(username: string, password: string): Promise<str
   return user.uuid;
 }
 
-// Validation
+// validation
 export function validateUsername(username: string) {
   if (username.length < 4 || username.length > 16)
     throw new Error("Username must be between 4 to 16 characters");
