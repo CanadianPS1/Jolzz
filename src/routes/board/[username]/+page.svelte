@@ -1,6 +1,7 @@
 <script lang="ts">
     let gameOver = false;
 
+    import { boardState } from "$lib/services/Board";
     import { onDestroy, onMount } from "svelte";
     import { pieces, row, columns, tiles, piecesEqualChance, piecemap } from "$lib/services/Board";
     import { Piece } from "$lib/services/Piece";
@@ -93,6 +94,7 @@
                 character: p,
                 pieceIndex: p !== "_" ? piecemap[p].pieceIndex : -1
             };
+            boardState[id] = null; 
 
             // start empty
             button.textContent = "";
@@ -121,6 +123,7 @@
     // spawn a single random piece on a tile 
     function placeRandomPiece(button: HTMLButtonElement, side: "white" | "black", pieceIndex: number) {
         const piece = piecesEqualChance[pieceIndex];
+        boardState[button.id] = { side, piece };
 
         const img = side === "white"
             ? `/assets/WhiteSidePieces/WhiteSide${piece}.png`
@@ -144,145 +147,149 @@
     }
 
     // handle tile clicks 
-    function press(tileId: string) {
-        if (gameOver || connection.currentTurn !== connection.playerColor) return;
+  function press(tileId: string) {
+    if (gameOver || connection.currentTurn !== connection.playerColor) return;
 
-        const tile = tiles[tileId];
-        if (!tile) return;
+    const tile = tiles[tileId];
+    if (!tile) return;
 
-        console.log("--- press() called on", tileId, "---");
+    console.log("--- press() called on", tileId, "---");
 
-        // selecting a piece
-        if (!selectedTile) {
-            const pieceName = piecesEqualChance[tile.pieceIndex];
-            const side: "white" | "black" = tile.character === tile.character.toUpperCase() ? "white" : "black";
-            if (tile.character === "_" || side != connection.playerColor) return;
-    
-            console.log("Piece:", pieceName, "Side:", side);
-            console.log("SELECTED:", side, pieceName, "at", tileId);
+    // read logical piece state instead of UI-derived side
+    const pieceState = boardState[tileId];
 
-            selectedTile = tileId;
-            selectedPiece = pieceName;
-            selectedSide = side;
+    // selecting a piece 
+    if (!selectedTile) {
 
-            // compute moves for this piece
-            switch (pieceName) {
-                case "Pawn":
-                    currentMoves = pawnMovement(tileId, side).moves;
-                    break;
-
-                case "Rook":
-                    currentMoves = rookMovement(tileId, side);
-                    break;
-
-                case "Bishop":
-                    currentMoves = bishopMovement(tileId, side);
-                    break;
-
-                case "Knight":
-                    currentMoves = knightMovement(tileId, side);
-                    break;
-
-                case "Queen":
-                    currentMoves = queenMovement(tileId, side);
-                    break;
-
-                case "King":
-                    currentMoves = kingMovement(tileId, side);
-                    break;
-
-                default:
-                    currentMoves = [];
-                    break;
-            }
-
-            console.log("Legal moves:", currentMoves);
-
-            // highlight moves for all pieces
-            clearHighlights();
-            highlightTiles(currentMoves);
+        // tile empty or opponent's piece → ignore
+        if (!pieceState || pieceState.side !== connection.playerColor) {
             return;
         }
 
-        // deselect same tile
-        if (tileId === selectedTile) {
-            console.log("Deselected", tileId);
-            clearSelection();
-            return;
+        console.log("SELECTED:", pieceState.side, pieceState.piece, "at", tileId);
+
+        selectedTile = tileId;
+        selectedPiece = pieceState.piece;
+        selectedSide = pieceState.side;
+
+        // compute moves for this piece
+        switch (selectedPiece) {
+            case "Pawn":
+                currentMoves = pawnMovement(tileId, selectedSide).moves;
+                break;
+            case "Rook":
+                currentMoves = rookMovement(tileId, selectedSide);
+                break;
+            case "Bishop":
+                currentMoves = bishopMovement(tileId, selectedSide);
+                break;
+            case "Knight":
+                currentMoves = knightMovement(tileId, selectedSide);
+                break;
+            case "Queen":
+                currentMoves = queenMovement(tileId, selectedSide);
+                break;
+            case "King":
+                currentMoves = kingMovement(tileId, selectedSide);
+                break;
+            default:
+                currentMoves = [];
+                break;
         }
 
-        // move if tile is in legal moves
-        if (currentMoves.includes(tileId)) {
-            console.log("Moving from", selectedTile, "to", tileId);
-            movePiece(selectedTile, tileId);
-            clearSelection();
-            return;
-        }
+        console.log("Legal moves:", currentMoves);
 
-        // switch selection to a different piece
+        clearHighlights();
+        highlightTiles(currentMoves);
+        return;
+    }
+
+    // re-click same tile → deselect 
+    if (tileId === selectedTile) {
+        console.log("Deselected", tileId);
+        clearSelection();
+        return;
+    }
+
+    // move piece if valid
+    if (currentMoves.includes(tileId)) {
+        console.log("Moving from", selectedTile, "to", tileId);
+        movePiece(selectedTile, tileId);
+        clearSelection();
+        return;
+    }
+
+    // clicking another owned piece switches selection 
+    if (pieceState && pieceState.side === connection.playerColor) {
         console.log("Switching selection to", tileId);
         clearSelection();
-        press(tileId);
+        press(tileId); // re-evaluate selection as fresh click
+        return;
     }
+
+
+}
+
 
     // move the piece from -> to 
-    function movePiece(fromId: string, toId: string) {
-        const from = tiles[fromId];
-        const to = tiles[toId];
+  function movePiece(fromId: string, toId: string) {
+    const from = tiles[fromId];
+    const to = tiles[toId];
+    if (!from || !to) return;
 
-        if (!from || !to) return;
+    // store this before clearing source
+    const movedChar = from.character;
+    const side = movedChar === movedChar.toUpperCase() ? "white" : "black";
 
-        const side = from.character.toUpperCase() === from.character ? "white" : "black";
-
-        // king capture check
-        if (to.character === "K") {
-            endGame("white");
-            return;
-        } else if (to.character === "k") {
-            endGame("black");
-            return;
-        }
-
-        const toButton = to.button;
-        const fromButton = from.button;
-
-        // copy appearence
-        toButton.style.backgroundImage = fromButton.style.backgroundImage;
-        toButton.style.backgroundSize = "cover";
-        toButton.style.backgroundPosition = "center";
-        toButton.style.backgroundRepeat = "no-repeat";
-        to.character = from.character;
-
-        // copy peice data
-        toButton.textContent = fromButton.textContent;
-        toButton.dataset.side = side;
-
-        // clear old title
-        fromButton.style.backgroundImage = "";
-        fromButton.style.backgroundSize = "";
-        fromButton.style.backgroundPosition = "";
-        fromButton.style.backgroundRepeat = "";
-        fromButton.textContent = "";
-        from.character = "_";
-        delete fromButton.dataset.side;
-
-        //  promotion check
-        if (from.character.toUpperCase() === "P") {
-            const row = toId[1];
-
-            if (side == "white" && row === "8") {
-                promotePawn(to.button, "white");
-                to.character = "Q";
-            }
-
-            if (side == "black" && row === "1") {
-                promotePawn(to.button, "black");
-                to.character = "q";
-            }
-        }
-
-        connection.board = generateBoardString();
+    // king capture check
+    if (to.character === "K") {
+        endGame("white");
+        return;
+    } else if (to.character === "k") {
+        endGame("black");
+        return;
     }
+
+    boardState[toId] = boardState[fromId]; // moved piece enters new square
+    boardState[fromId] = null;             // origin square now empty
+
+    const toButton = to.button;
+    const fromButton = from.button;
+
+    toButton.style.backgroundImage = fromButton.style.backgroundImage;
+    toButton.style.backgroundSize = "cover";
+    toButton.style.backgroundPosition = "center";
+    toButton.style.backgroundRepeat = "no-repeat";
+
+    to.character = movedChar;
+    toButton.textContent = fromButton.textContent;
+    toButton.dataset.side = side;
+
+    // clear old square
+    fromButton.style.backgroundImage = "";
+    fromButton.textContent = "";
+    from.character = "_";
+    delete fromButton.dataset.side;
+
+    // promotion fix – check moved piece NOT cleared one
+    if (movedChar.toUpperCase() === "P") {
+        const row = toId[1];
+
+        if (side === "white" && row === "8") {
+            promotePawn(to.button, "white");
+            to.character = "Q";
+            boardState[toId] = { side, piece: "Queen" };
+        }
+
+        if (side === "black" && row === "1") {
+            promotePawn(to.button, "black");
+            to.character = "q";
+            boardState[toId] = { side, piece: "Queen" };
+        }
+    }
+
+    connection.board = generateBoardString();
+}
 
     function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
         // for now always promote to Queen
@@ -432,6 +439,11 @@
         pointer-events: none;
         opacity: 0.6;
     }
+
+    .isHighlighted {
+    background-color: yellow !important;
+    border: 2px solid gold !important;
+}
 
     .user1 { margin-top: 1%; margin-left: 10%; }
     .user2 { margin-left: 80%; margin-bottom: 1%; }

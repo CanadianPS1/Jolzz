@@ -18,3 +18,7 @@ export const piecemap: { [key: string]: { side: "white" | "black", pieceIndex: n
   q: { side: "black", pieceIndex: 4 },
   k: { side: "black", pieceIndex: 5 }
 };
+
+export const boardState: { 
+    [tileId: string]: { side: "white" | "black", piece: string } | null 
+} = {};

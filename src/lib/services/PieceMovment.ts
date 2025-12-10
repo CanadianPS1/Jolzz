@@ -1,5 +1,6 @@
 import { tiles, columns, row } from "$lib/services/Board";
 import { highlightTiles } from "$lib/services/HighlightService";
+import { boardState } from "$lib/services/Board";
 
 // convert tile string ex:a4 -> indexs
 function parseTile(tileId: string) {
@@ -20,17 +21,13 @@ function makeTile(colIndex: number, rowIndex: number): string | null {
 
 // a tile is occupied ONLY if it has a dataset.side
 function tileOccupied(tileId: string): boolean {
-    const btn = tiles[tileId].button;
-    if (!btn) return false;
-    return !!btn.dataset.side;
+    return !!boardState[tileId];
 }
 
 // a tile is enemy-occupied ONLY if dataset.side exists AND is not pawnSide
-function tileOccupiedByEnemy(tileId: string, pawnSide: string): boolean {
-    const btn = tiles[tileId].button;
-    if (!btn) return false;
-    const side = btn.dataset.side;
-    return !!side && side !== pawnSide;
+function tileOccupiedByEnemy(tileId: string, ownSide: string): boolean {
+    const piece = boardState[tileId];
+    return !!piece && piece.side !== ownSide;
 }
 
 export function pawnMovement(tile: string, side: string) {
@@ -95,9 +92,6 @@ export function pawnMovement(tile: string, side: string) {
         const { rowIndex: r } = parseTile(t);
         return r === promotionRow;
     });
-
-    highlightTiles(moves);
-
     return { moves, promotionMoves };
 }
 
