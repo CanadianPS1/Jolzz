@@ -20,14 +20,14 @@ function makeTile(colIndex: number, rowIndex: number): string | null {
 
 // a tile is occupied ONLY if it has a dataset.side
 function tileOccupied(tileId: string): boolean {
-    const btn = tiles[tileId];
+    const btn = tiles[tileId].button;
     if (!btn) return false;
     return !!btn.dataset.side;
 }
 
 // a tile is enemy-occupied ONLY if dataset.side exists AND is not pawnSide
 function tileOccupiedByEnemy(tileId: string, pawnSide: string): boolean {
-    const btn = tiles[tileId];
+    const btn = tiles[tileId].button;
     if (!btn) return false;
     const side = btn.dataset.side;
     return !!side && side !== pawnSide;
@@ -53,7 +53,7 @@ export function pawnMovement(tile: string, side: string) {
 
     if (forwardTile) {
         const btn = tiles[forwardTile];
-        console.log("Forward dataset.side:", btn?.dataset.side);
+        console.log("Forward dataset.side:", btn?.button.dataset.side);
     }
 
     const leftDiag = makeTile(colIndex - 1, rowIndex + direction);
@@ -148,7 +148,10 @@ export function bishopMovement(start: string, side: string) {
     directions.forEach(dir => {
         for (let i = 1; i < 8; i++) {
             const tile = makeTile(colIndex + dir.dc * i, rowIndex + dir.dr * i);
-            if (!tile) break;
+            if (!tile) {
+                console.log("invalid tile at", colIndex, rowIndex);
+                break;
+            }
 
             if (!tileOccupied(tile)) moves.push(tile);
             else {

@@ -2,7 +2,7 @@
     let gameOver = false;
 
     import { onDestroy, onMount } from "svelte";
-    import { pieces, row, columns, tiles, piecesEqualChance } from "$lib/services/Board";
+    import { pieces, row, columns, tiles, piecesEqualChance, piecemap } from "$lib/services/Board";
     import { Piece } from "$lib/services/Piece";
     import {
         pawnMovement,
@@ -13,7 +13,7 @@
         queenMovement
     } from "$lib/services/PieceMovment";
     import { highlightTiles, clearHighlights } from "$lib/services/HighlightService";
-    import { currentTurn_store, opponent_store, playerColor_store, username_store } from "$lib/store/ConncectionStore";
+    import { board_store, currentTurn_store, opponent_store, playerColor_store, username_store } from "$lib/store/ConncectionStore";
     import { ClientConncection } from "$lib/services/ClientConnection";
     import { page } from "$app/state";
     import { goto } from "$app/navigation";
@@ -58,6 +58,7 @@
         opponent_store.subscribe((value) => opponent = value);
         playerColor_store.subscribe((value) => playerColor = value);
         currentTurn_store.subscribe((value) => currentTurn = value);
+        board_store.subscribe((value) => generateBoard(value));
 
         connection = new ClientConncection("ws", "127.0.0.1", 3333);
         setTimeout(() => {
@@ -74,113 +75,52 @@
         if (connection != undefined) connection.close();
     });
 
-    function generateBoard() {
-        row.forEach((r) => {
-            tileCount++;
-            columns.forEach((c) => {
-                const id = `${c}${r}`;
-                const button = document.getElementById(id) as HTMLButtonElement | null;
-                if (!button) {
-                    console.warn("Tile not found:", id);
-                    return;
-                }
+    function generateBoard(board: string) {
+        board.split("").forEach((p, i) => {
+            const c = i % 8;
+            const r = Math.floor(i / 8);
 
-                // register tile globally
-                tiles[id] = button;
+            const id = `${columns[c]}${r + 1}`;
+            const button = document.getElementById(id) as HTMLButtonElement | null;
+            if (!button) {
+                console.warn("Tile not found:", id);
+                return;
+            }
 
-                // start empty
-                button.textContent = "";
-                button.style.backgroundImage = "";
-                
-                // Random spawn logic. Peices to muddled and kings always spawn next to eachother
-                
-                //const spawnedCount = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
-                //const neededChance = (64 - tileCount) - spawnedCount;
-                //const roll = Math.floor(Math.random() * 100) + 1;
-                // const amountOfPieces : number = 32 - (whitePiecesToSpawn + blackPiecesToSpawn);
-                // const chanceOfPiece : number = ((64 - tileCount) - (amountOfPieces + 2));
-                // if(Math.floor(Math.random() * 100) + 1 > chanceOfPiece && amountOfPieces <= 32){
-                //     const whiteCount = 16 - whitePiecesToSpawn;
-                //     const blackCount = 16 - blackPiecesToSpawn;
+            // register tile globally
+            tiles[id] = {
+                button: button,
+                character: p,
+                pieceIndex: p !== "_" ? piecemap[p].pieceIndex : -1
+            };
 
-                //     if((16 - whitePiecesToSpawn) < (16 - blackPiecesToSpawn) && whitePiecesToSpawn > 0){
-                //         placeRandomPiece(button, "white", whiteCount);
-                //         whitePiecesToSpawn--;
-                //     }else if((16 - whitePiecesToSpawn) > (16 - blackPiecesToSpawn) && blackPiecesToSpawn > 0){
-                //         placeRandomPiece(button, "black", blackCount);
-                //         blackPiecesToSpawn--;
-                //     } else {
-                //             if(Math.floor(Math.floor(Math.random() * 100) + 1) > 50 && whitePiecesToSpawn > 0){
-                //             placeRandomPiece(button, "white", whiteCount);
-                //             whitePiecesToSpawn--;
-                //         } else if (blackPiecesToSpawn > 0) {
-                //             placeRandomPiece(button, "black", blackCount);
-                //             blackPiecesToSpawn--;
-                //         }
-                //     }
-                // }
-            });
+            // start empty
+            button.textContent = "";
+            button.style.backgroundImage = "";
+
+            // get and place the piece on the board
+            if (p !== "_") {
+                const piece = piecemap[p];
+                placeRandomPiece(button, piece.side, piece.pieceIndex);
+            }
         });
     }
 
-    function generateRandomRows() {
-        const whiteRow = row.splice(0, 2);
-        const blackRow = row.splice(row.length - 2);
-
-        const createdPieces = new Array<string>(16);
-
-        const kingPlacement = Math.floor(Math.random() * 8);
-        const button = document.getElementById(`${columns[kingPlacement]}${1}`) as HTMLButtonElement | null;
-        if (button) {
-            button.disabled = false;
-            button.style.backgroundImage = "url(/assets/WhiteSidePieces/WhiteSideKing.png)";
-            button.style.backgroundSize = "cover";
-            button.style.backgroundPosition = "center";
-            button.textContent = "King";
-            createdPieces[kingPlacement] = "King";
-        }
-
-        whiteRow.forEach((row, rowIndex) => {
-            tileCount++;
-            columns.forEach((col, colIndex) => {
-                if (kingPlacement == colIndex + rowIndex * 8) return;
-
-                const id = `${col}${row}`;
-                const button = document.getElementById(id) as HTMLButtonElement | null;
-                if (button) {
-                    button.disabled = false;
-                    const randomPiece = Math.floor(Math.random() * (piecesEqualChance.length - 1));
-                    const piece: string = piecesEqualChance[randomPiece];
-                    const imageURL = "/assets/WhiteSidePieces/WhiteSide" + piece + ".png";
-                    button.style.backgroundImage = "url(" + imageURL + ")";
-                    button.style.backgroundSize = "cover";
-                    button.style.backgroundPosition = "center";
-                    button.textContent = piece;
-                    createdPieces[colIndex + rowIndex * 8] = piece;
-                }
+    function generateBoardString(): string {
+        let board = "";
+        row.forEach((r) => {
+            columns.forEach((c) => {
+                const id = `${c}${r}`;
+                board += tiles[id].character;
             });
         });
 
-        blackRow.forEach((row, rowIndex) => {
-            columns.forEach((col, colIndex) => {
-                const id = `${col}${row}`;
-                const button = document.getElementById(id) as HTMLButtonElement | null;
-                if (button) {
-                    button.disabled = false;
-                    const piece = createdPieces[colIndex + ((blackRow.length - rowIndex - 1) * 8)];
-                    const imageURL = "/assets/BlackSidePieces/BlackSide" + piece + ".png";
-                    button.style.backgroundImage = "url(" + imageURL + ")";
-                    button.style.backgroundSize = "cover";
-                    button.style.backgroundPosition = "center";
-                    button.textContent = piece;
-                }
-            });
-        });
+        return board;
     }
 
     // spawn a single random piece on a tile 
     function placeRandomPiece(button: HTMLButtonElement, side: "white" | "black", pieceIndex: number) {
-        const piece = pieces[pieceIndex];
+        const piece = piecesEqualChance[pieceIndex];
 
         const img = side === "white"
             ? `/assets/WhiteSidePieces/WhiteSide${piece}.png`
@@ -205,35 +145,20 @@
 
     // handle tile clicks 
     function press(tileId: string) {
-        if (gameOver) return;
-        const btn = tiles[tileId];
-        if (!btn) return;
+        if (gameOver || connection.currentTurn !== connection.playerColor) return;
+
+        const tile = tiles[tileId];
+        if (!tile) return;
 
         console.log("--- press() called on", tileId, "---");
 
-        const pieceName = btn.textContent?.trim() || "";
-
-        // determine side safely
-        let side: "white" | "black" | null = null;
-        const rawSide = btn.dataset.side;
-
-        if (rawSide === "white" || rawSide === "black") {
-            side = rawSide;
-        } else {
-            const img = btn.style.backgroundImage;
-            if (img.includes("WhiteSide")) side = "white";
-            if (img.includes("BlackSide")) side = "black";
-        }
-
-        console.log("Piece:", pieceName, "Side:", side);
-
         // selecting a piece
         if (!selectedTile) {
-            if (!pieceName || !side) {
-                console.log("Not a valid selectable piece.");
-                return;
-            }
-
+            const pieceName = piecesEqualChance[tile.pieceIndex];
+            const side: "white" | "black" = tile.character === tile.character.toUpperCase() ? "white" : "black";
+            if (tile.character === "_" || side != connection.playerColor) return;
+    
+            console.log("Piece:", pieceName, "Side:", side);
             console.log("SELECTED:", side, pieceName, "at", tileId);
 
             selectedTile = tileId;
@@ -276,7 +201,6 @@
             // highlight moves for all pieces
             clearHighlights();
             highlightTiles(currentMoves);
-
             return;
         }
 
@@ -296,14 +220,9 @@
         }
 
         // switch selection to a different piece
-        if (pieceName) {
-            console.log("Switching selection to", tileId);
-            clearSelection();
-            press(tileId);
-            return;
-        }
-
-        console.log("Clicked non-legal empty tile");
+        console.log("Switching selection to", tileId);
+        clearSelection();
+        press(tileId);
     }
 
     // move the piece from -> to 
@@ -313,45 +232,56 @@
 
         if (!from || !to) return;
 
-        const piece = from.textContent;
-        const side = from.dataset.side;
+        const side = from.character.toUpperCase() === from.character ? "white" : "black";
 
         // king capture check
-        if (to.textContent === "King") {
-            endGame(side === "white" ? "white" : "black");
+        if (to.character === "K") {
+            endGame("white");
+            return;
+        } else if (to.character === "k") {
+            endGame("black");
             return;
         }
 
+        const toButton = to.button;
+        const fromButton = from.button;
+
         // copy appearence
-        to.style.backgroundImage = from.style.backgroundImage;
-        to.style.backgroundSize = "cover";
-        to.style.backgroundPosition = "center";
-        to.style.backgroundRepeat = "no-repeat";
+        toButton.style.backgroundImage = fromButton.style.backgroundImage;
+        toButton.style.backgroundSize = "cover";
+        toButton.style.backgroundPosition = "center";
+        toButton.style.backgroundRepeat = "no-repeat";
+        to.character = from.character;
 
         // copy peice data
-        to.textContent = from.textContent;
-        to.dataset.side = side;
+        toButton.textContent = fromButton.textContent;
+        toButton.dataset.side = side;
 
         // clear old title
-        from.style.backgroundImage = "";
-        from.style.backgroundSize = "";
-        from.style.backgroundPosition = "";
-        from.style.backgroundRepeat = "";
-        from.textContent = "";
-        delete from.dataset.side;
+        fromButton.style.backgroundImage = "";
+        fromButton.style.backgroundSize = "";
+        fromButton.style.backgroundPosition = "";
+        fromButton.style.backgroundRepeat = "";
+        fromButton.textContent = "";
+        from.character = "_";
+        delete fromButton.dataset.side;
 
         //  promotion check
-        if (piece === "Pawn") {
+        if (from.character.toUpperCase() === "P") {
             const row = toId[1];
 
-            if (side === "white" && row === "8") {
-                promotePawn(to, "white");
+            if (side == "white" && row === "8") {
+                promotePawn(to.button, "white");
+                to.character = "Q";
             }
 
-            if (side === "black" && row === "1") {
-                promotePawn(to, "black");
+            if (side == "black" && row === "1") {
+                promotePawn(to.button, "black");
+                to.character = "q";
             }
         }
+
+        connection.board = generateBoardString();
     }
 
     function promotePawn(tile: HTMLButtonElement, side: "white" | "black") {
@@ -385,7 +315,7 @@
         alert(`${winner.toUpperCase()} WINS! The king has been captured.`);
         console.log(`GAME OVER — ${winner.toUpperCase()} wins.`);
         for (const id in tiles) {
-            tiles[id].style.opacity = "0.8";
+            tiles[id].button.style.opacity = "0.8";
         }
     }    
 
@@ -441,11 +371,13 @@
     <h2>
         <div class="username">
             {#key username}
-                <div class="user1">{username != null ? username : ""}</div>
+                <div class="user1">{username != null ? username : ""} ({playerColor})</div>
             {/key}
             <!-- <div class="u1WinsLosses">W/L</div> -->
         </div>
-        <!--<div class="actingPlayer">USER #'s TURN</div>-->
+        {#key currentTurn}
+            <div class="actingPlayer">{currentTurn.toUpperCase()}'S TURN</div>
+        {/key}
     </h2>
 
     <h1 class="board">
@@ -468,7 +400,7 @@
         <div class="username">
             <!-- <div class="u2WinsLosses">W/L</div> -->
             {#key opponent}
-                <div class="user2">{opponent != null ? opponent : ""}</div>
+                <div class="user2">{opponent != null ? opponent : ""} ({playerColor == "white" ? "black" : "white"})</div>
             {/key}
         </div>
     </h2>

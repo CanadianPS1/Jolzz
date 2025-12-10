@@ -1,4 +1,5 @@
 import {
+  board_store,
   currentTurn_store,
   opponent_store,
   playerColor_store,
@@ -17,7 +18,7 @@ export class ClientConncection {
   private _username: string | null = null;
   private _opponent: string | null = null;
   private _playerColor: "white" | "black" | null = null;
-  private _currentTurn: "white" | "black" = "white";
+  private _currentTurn: "white" | "black" = "black";
   private _board: string | null = null;
 
   public constructor(protocol: "ws" | "wss", serverIP: string, serverPort: number) {
@@ -45,7 +46,11 @@ export class ClientConncection {
         else this.playerColor = "white";
         break;
       case MessageAction.BOARD_RECEIVED:
-        console.log(message);
+        const layout = message.split("new_board=")[1]
+        console.log(layout);
+        this._board = layout;
+        board_store.set(layout);
+        this.currentTurn = this.currentTurn == "white" ? "black" : "white";
         break;
       case MessageAction.INVALID:
         break;
@@ -56,9 +61,11 @@ export class ClientConncection {
     if (message.includes("user_authenticated=false"))
       return MessageAction.NOT_AUTHENTICATED;
 
-    if (message.includes("game_ready=true")) return MessageAction.GAME_START;
+    if (message.includes("game_ready=true"))
+      return MessageAction.GAME_START;
 
-    if (message.includes("new_board=")) return MessageAction.BOARD_RECEIVED;
+    if (message.includes("new_board="))
+      return MessageAction.BOARD_RECEIVED;
 
     return MessageAction.INVALID;
   }
@@ -91,7 +98,7 @@ export class ClientConncection {
     playerColor_store.set(value);
   }
 
-  private get playerColor(): "white" | "black" | null {
+  public get playerColor(): "white" | "black" | null {
     return this._playerColor;
   }
 
@@ -100,7 +107,7 @@ export class ClientConncection {
     currentTurn_store.set(value);
   }
 
-  private get currentTurn(): "white" | "black" | null {
+  public get currentTurn(): "white" | "black" | null {
     return this._currentTurn;
   }
 
@@ -109,6 +116,8 @@ export class ClientConncection {
 
     if (this.playerColor == "white") this.websocket.send(`tw:${value}`);
     else this.websocket.send(`tb:${value}`);
+    this.currentTurn = this.currentTurn == "white" ? "black" : "white";
+    board_store.set(value);
   }
 
   public get board(): string | null {
