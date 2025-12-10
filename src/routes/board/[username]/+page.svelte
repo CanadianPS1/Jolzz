@@ -459,7 +459,7 @@
         text-align: center;
     }
     
-    .isHighlighted {
+    :global(.isHighlighted) {
         background-color: yellow !important;
         border: 2px solid gold !important;
     }
