@@ -39,11 +39,15 @@
 	onMount(() => {
 		const funnyGuy = document.getElementById('funnyGuy');
 		const funnyGuyImage = document.getElementById('funnyGuyImage');
-		funnyGuyImage.style.display = "none";
-		funnyGuy.addEventListener('click', function() {
+		const funnyGuySound = new Audio('/assets/funnySound.wav');
+		funnyGuyImage!.style.display = "none";
+		funnyGuy!.addEventListener('click', function() {
 			console.log("funny button was pressed");
-			funnyGuy.style.backgroundImage="url(/assets/funnyGuy.png)";
-			funnyGuyImage.style.display = "block";
+			funnyGuy!.style.backgroundImage="url(/assets/funnyGuy.png)";
+			funnyGuyImage!.style.display = "block";
+			if (funnyGuySound.paused) {
+				funnyGuySound.play();
+			}
 		});
 	});
 	
