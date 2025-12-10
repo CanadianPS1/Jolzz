@@ -40,6 +40,7 @@
 		const funnyGuy = document.getElementById('funnyGuy');
 		const funnyGuyImage = document.getElementById('funnyGuyImage');
 		const funnyGuySound = new Audio('/assets/funnySound.wav');
+		if (funnyGuy == null || funnyGuyImage == null) return;
 		funnyGuyImage!.style.display = "none";
 		funnyGuy!.addEventListener('click', function() {
 			console.log("funny button was pressed");

@@ -387,10 +387,10 @@
         {/key}
     </h2>
 
-    <h1 class="board">
+    <div class="board">
         <!--generates each button with its location-->
         {#each row as num}
-            <div class={"row" + num}>
+            <div class="row">
                 {#each columns as col}
                     <button
                         title={`${col}${num}`}
@@ -401,7 +401,7 @@
                 {/each}
             </div>
         {/each}
-    </h1>
+    </div>
 
     <h2>
         <div class="username">
@@ -414,12 +414,16 @@
 </main>
 
 <style>
-    * { margin: 0; padding: 0; }
-    .row1 { margin-top: 1%; margin-left: 30%; }
-    .row1, .row2, .row3, .row4, .row5, .row6, .row7, .row8 {
-        display: flex;
-        margin-left: 30%;
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
     }
+
+    .row {
+        display: flex;
+    }
+
     .tile {
         width: 5.5rem;
         height: 5.5rem;
@@ -428,26 +432,42 @@
     }
 
     .tile.light {
-    background-color: #f0d9b5; 
-     }
-
-    .tile.dark {
-    background-color: #b58863; 
-     }
-
-    .tile.disabled {
-        pointer-events: none;
-        opacity: 0.6;
+        background-color: #f0d9b5; 
     }
 
-    .isHighlighted {
-    background-color: yellow !important;
-    border: 2px solid gold !important;
-}
+    .tile.dark {
+        background-color: #b58863; 
+    }
 
-    .user1 { margin-top: 1%; margin-left: 10%; }
-    .user2 { margin-left: 80%; margin-bottom: 1%; }
-    .u2WinsLosses { margin-left: 84%; }
-    .u1WinsLosses { margin-left: 14%; }
-    .actingPlayer { margin-top: 2%; text-align: center; }
+    .user1 {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+    }
+    
+    .user2 {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+    
+    .actingPlayer {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+    }
+    
+    .isHighlighted {
+        background-color: yellow !important;
+        border: 2px solid gold !important;
+    }
+
+    .board {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
 </style>

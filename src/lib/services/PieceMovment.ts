@@ -142,10 +142,7 @@ export function bishopMovement(start: string, side: string) {
     directions.forEach(dir => {
         for (let i = 1; i < 8; i++) {
             const tile = makeTile(colIndex + dir.dc * i, rowIndex + dir.dr * i);
-            if (!tile) {
-                console.log("invalid tile at", colIndex, rowIndex);
-                break;
-            }
+            if (!tile) break;
 
             if (!tileOccupied(tile)) moves.push(tile);
             else {
