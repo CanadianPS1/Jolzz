@@ -161,7 +161,7 @@
     // selecting a piece 
     if (!selectedTile) {
 
-        // tile empty or opponent's piece → ignore
+        // tile empty or opponent's piece -> ignore
         if (!pieceState || pieceState.side !== connection.playerColor) {
             return;
         }
@@ -204,7 +204,7 @@
         return;
     }
 
-    // re-click same tile → deselect 
+    // re-click same tile -> deselect 
     if (tileId === selectedTile) {
         console.log("Deselected", tileId);
         clearSelection();

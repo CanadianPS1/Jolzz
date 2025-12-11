@@ -113,7 +113,7 @@ export function rookMovement(start: string, side: string) {
             if (!tile) break;
 
             if (!tileOccupied(tile)) {
-                moves.push(tile);       // empty square → legal
+                moves.push(tile);       // empty square -> legal
             } else {
                 if (tileOccupiedByEnemy(tile, side)) {
                     moves.push(tile);   // capture
